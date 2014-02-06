@@ -13,9 +13,10 @@ module.exports = function(contextEngine){
 
 			text.post = function(req, res){
 				var event = {type:'text', text:req.body.eventText};
-				
-				contextEngine.processNewEvent(event);
-				res.redirect('/events/recent');
+
+				contextEngine.processNewEvent(event, function(){
+					res.redirect('/events/recent');	
+				});
 			}
 
 			return text;
@@ -26,8 +27,9 @@ module.exports = function(contextEngine){
 	})();
 
 	eventsModule.listRecent = function(req,res){
-		var recentEvents = contextEngine.getRecentEvents();
-		res.render('events-list', {title:'Recent Events', events:recentEvents});
+		contextEngine.getRecentEvents(function(err, recentEvents){
+			res.render('events-list', {title:'Recent Events', events:recentEvents});
+		});
 	}
 
 	return eventsModule;

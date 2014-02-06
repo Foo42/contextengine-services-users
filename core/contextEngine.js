@@ -5,12 +5,13 @@ module.exports = (function(){
 		var self = this;
 		var recentEvents = [];
 
-		self.processNewEvent = function(event){
+		self.processNewEvent = function(event, done){
 			recentEvents.push(event);
+			done();
 		}
 
-		self.getRecentEvents = function(){
-			return recentEvents;
+		self.getRecentEvents = function(done){
+			done(null, recentEvents);
 		}
 	};
 	
