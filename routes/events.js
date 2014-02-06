@@ -1,7 +1,5 @@
-module.exports = function(s){
+module.exports = function(contextEngine){
 	var eventsModule = {};
-
-	var recentEvents = [];
 
 	eventsModule.capture = (function(){
 		var capture = {};
@@ -15,7 +13,8 @@ module.exports = function(s){
 
 			text.post = function(req, res){
 				var event = {type:'text', text:req.body.eventText};
-				recentEvents.push(event);
+				
+				contextEngine.processNewEvent(event);
 				res.redirect('/events/recent');
 			}
 
@@ -27,6 +26,7 @@ module.exports = function(s){
 	})();
 
 	eventsModule.listRecent = function(req,res){
+		var recentEvents = contextEngine.getRecentEvents();
 		res.render('events-list', {title:'Recent Events', events:recentEvents});
 	}
 

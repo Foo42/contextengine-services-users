@@ -5,8 +5,9 @@
 
 var express = require('express')
   , routes = require('./routes')
+  , ContextEngine = require('./core/contextEngine').ContextEngine
   , user = require('./routes/user')
-  , events = require('./routes/events')('hello')
+  , events = require('./routes/events')(new ContextEngine())
   , http = require('http')
   , path = require('path');
 
