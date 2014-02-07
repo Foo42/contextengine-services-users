@@ -19,14 +19,11 @@ module.exports = function(grunt) {
       scripts: {
         files: ['**/*.js'],
         tasks: ['quickFeedback'],
-        options: {
-          spawn: false,
-        },
       },
     },
   });
 
-  grunt.registerTask('quickFeedback', 'mochaTest');
-  grunt.registerTask('default', 'quickFeedback', 'watch');
+  grunt.registerTask('quickFeedback', ['mochaTest']);
+  grunt.registerTask('default', ['quickFeedback', 'watch']);
 
 };

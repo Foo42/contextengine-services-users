@@ -1,5 +1,8 @@
 module.exports = function(contextEngine){
 	var eventsModule = {};
+	contextEngine.on('event created',function(event){
+		console.log(event);
+	});
 
 	eventsModule.capture = (function(){
 		var capture = {};
@@ -14,7 +17,7 @@ module.exports = function(contextEngine){
 			text.post = function(req, res){
 				var event = {type:'text', text:req.body.eventText};
 
-				contextEngine.processNewEvent(event, function(){
+				contextEngine.registerNewEvent(event, function(){
 					res.redirect('/events/recent');	
 				});
 			}

@@ -1,3 +1,6 @@
+var util = require('util');
+var EventEmitter = require('events').EventEmitter;
+
 module.exports = (function(){
 	var module = {};
 
@@ -5,8 +8,14 @@ module.exports = (function(){
 		var self = this;
 		var recentEvents = [];
 
-		self.processNewEvent = function(event, done){
+
+		self.registerNewEvent = function(event, done){
+			event.metadata = event.metadata || {};
+			event.metadata.time = event.metadata.time || new Date();
+
 			recentEvents.push(event);
+			
+			self.emit('event created', event);
 			done();
 		}
 
@@ -14,6 +23,8 @@ module.exports = (function(){
 			done(null, recentEvents);
 		}
 	};
+
+	util.inherits(module.ContextEngine, EventEmitter);
 	
 
 	return module;
