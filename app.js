@@ -5,28 +5,13 @@
 
 var express = require('express')
   , routes = require('./routes')
-  , ContextEngine = require('./core/contextEngine').ContextEngine
+  , contextEngine = require('./core/contextEngine').createContextEngine()
   , user = require('./routes/user')
-  , contextEngine = new ContextEngine()
   , events = require('./routes/events')(contextEngine)
   , http = require('http')
   , path = require('path');
 
 var app = express();
-
-(function(){
-	var fs = require('fs');
-	var fileName = __dirname + "/eventLog.txt";
-	var persistEvent = function(event){
-		var lineToAppend = JSON.stringify(event);
-		fs.appendFile(fileName, lineToAppend, function (err) {
-			console.log("wrote to file with err: " + err);
-		});	
-	}
-
-	contextEngine.on('event created', persistEvent);
-
-})();
 
 // all environments
 app.set('port', process.env.PORT || 3000);
@@ -45,7 +30,7 @@ if ('development' == app.get('env')) {
   app.use(express.errorHandler());
 }
 
-app.get('/', routes.index);
+app.get('/', function(req,res){res.redirect('/events/capture/text')});
 app.get('/users', user.list);
 
 app.get('/events/capture/text', events.capture.text.get);

@@ -1,8 +1,16 @@
 var util = require('util');
 var EventEmitter = require('events').EventEmitter;
+var fileAppendingEventListener = require('./fileAppendingEventListener');
 
 module.exports = (function(){
 	var module = {};
+
+	module.createContextEngine = function(){
+		var contextEngine = new module.ContextEngine();
+		fileAppendingEventListener.attachListener(contextEngine);
+
+		return contextEngine;
+	}
 
 	module.ContextEngine = function(){
 		var self = this;

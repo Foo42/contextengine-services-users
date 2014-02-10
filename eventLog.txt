@@ -1,1 +1,1 @@
-{"type":"text","text":"hello","metadata":{"time":"2014-02-07T13:03:23.825Z"}}{"type":"text","text":"hello","metadata":{"time":"2014-02-07T13:06:23.894Z"}}{"type":"text","text":"world","metadata":{"time":"2014-02-07T13:07:18.706Z"}}
+{"type":"text","text":"hello","metadata":{"time":"2014-02-07T13:03:23.825Z"}}{"type":"text","text":"hello","metadata":{"time":"2014-02-07T13:06:23.894Z"}}{"type":"text","text":"world","metadata":{"time":"2014-02-07T13:07:18.706Z"}}{"type":"text","text":"this is a test","metadata":{"time":"2014-02-10T08:24:22.669Z"}}
