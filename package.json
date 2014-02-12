@@ -9,7 +9,8 @@
   "dependencies": {
     "ejs": "~0.8.5",
     "express": "~3.2.4",
-    "less-middleware": "~0.1.15"
+    "less-middleware": "~0.1.15",
+    "filtr": "~0.3.0"
   },
   "devDependencies": {
     "mocha": "~1.17.1",
