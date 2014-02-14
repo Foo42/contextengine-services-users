@@ -9,7 +9,10 @@ module.exports = (function(){
 	module.createContextEngine = function(){
 		var contextEngine = new module.ContextEngine();
 		
-		var listeners = ['fileAppendingEventListener', 'eventInferenceEngine'];
+		var listeners = [
+			'fileAppendingEventListener',
+			'eventInferenceEngine',
+			'stateInferenceEngine'];
 		
 		listeners.forEach(function(listenerName){
 			var module = require('./'+listenerName);
