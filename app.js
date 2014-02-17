@@ -7,6 +7,7 @@ var express = require('express')
   , routes = require('./routes')
   , contextEngine = require('./core/contextEngine').createContextEngine()
   , user = require('./routes/user')
+  , authentication = require('./authentication').initialise()
   , events = require('./routes/events')(contextEngine)
   , states = require('./routes/states')(contextEngine)
   , http = require('http')
@@ -22,6 +23,7 @@ app.use(express.favicon());
 app.use(express.logger('dev'));
 app.use(express.bodyParser());
 app.use(express.methodOverride());
+authentication.insertMiddleware(app);
 app.use(app.router);
   app.use(require('less-middleware')({ src: __dirname + '/public' }));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -31,6 +33,7 @@ if ('development' == app.get('env')) {
   app.use(express.errorHandler());
 }
 
+authentication.setupRoutes(app);
 app.get('/', function(req,res){res.redirect('/events/capture/text')});
 app.get('/users', user.list);
 

@@ -10,7 +10,9 @@
     "ejs": "~0.8.5",
     "express": "~3.2.4",
     "less-middleware": "~0.1.15",
-    "filtr": "~0.3.0"
+    "filtr": "~0.3.0",
+    "passport": "~0.2.0",
+    "passport-google-oauth": "~0.1.5"
   },
   "devDependencies": {
     "mocha": "~1.17.1",

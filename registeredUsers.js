@@ -1,0 +1,1 @@
+module.export = {isRegisteredUser: function(){return true;}}
