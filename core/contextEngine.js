@@ -6,6 +6,8 @@ var eventInferenceEngine = require('./eventInferenceEngine');
 module.exports = (function(){
 	var module = {};
 
+
+
 	module.createContextEngine = function(){
 		var contextEngine = new module.ContextEngine();
 		
@@ -20,6 +22,15 @@ module.exports = (function(){
 		});
 
 		return contextEngine;
+	}
+
+	module.createContextEnginesForRegisteredUsers = function(){
+		var onlyContextEngine = module.createContextEngine();
+		return {
+			getContextEngineForUser:function(user, done){
+				done(null, onlyContextEngine);
+			}
+		}
 	}
 
 	module.ContextEngine = function(){

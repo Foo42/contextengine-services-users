@@ -1,5 +1,5 @@
 
-var initialise = function(){
+var initialise = function(getContextEngineForUser){
 	 var passport = require('passport');
 	 var registeredUsers = require('./registeredUsers');
 	 var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
@@ -12,6 +12,7 @@ var initialise = function(){
 	});
 
 	passport.deserializeUser(function(obj, done) {
+	  //attach context engine here?
 	  done(null, obj);
 	});
 
@@ -72,12 +73,6 @@ var initialise = function(){
 			    // The request will be redirected to Google for authentication, so this
 			    // function will not be called.
 			});
-
-			// GET /auth/google/callback
-			//   Use passport.authenticate() as route middleware to authenticate the
-			//   request.  If authentication fails, the user will be redirected back to the
-			//   login page.  Otherwise, the primary route function function will be called,
-			//   which, in this example, will redirect the user to the home page.
 			app.get('/auth/google/callback', 
 			  passport.authenticate('google', { failureRedirect: '/login' }),
 			  function(req, res) {

@@ -7,11 +7,11 @@ var isOfflineMode = process.env['OFFLINE_MODE'] && process.env['OFFLINE_MODE'].t
 
 var express = require('express')
   , routes = require('./routes')
-  , contextEngine = require('./core/contextEngine').createContextEngine()
+  , contextEngines = require('./core/contextEngine').createContextEnginesForRegisteredUsers()
   , user = require('./routes/user')
-  , authentication = isOfflineMode ? require('./fakeAuthentication').initialise() : require('./authentication').initialise()
-  , events = require('./routes/events')(contextEngine)
-  , states = require('./routes/states')(contextEngine)
+  , authentication = isOfflineMode ? require('./fakeAuthentication').initialise(contextEngines.getContextEngineForUser) : require('./authentication').initialise(contextEngines.getContextEngineForUser)
+  , events = require('./routes/events')()
+  , states = require('./routes/states')()
   , http = require('http')
   , path = require('path');
 
@@ -39,11 +39,11 @@ authentication.setupRoutes(app);
 app.get('/', function(req,res){res.redirect('/events/capture/text')});
 app.get('/users', user.list);
 
-app.get('/events/capture/text', events.capture.text.get);
-app.post('/events/text', events.capture.text.post);
-app.get('/events/recent', events.listRecent);
+app.get('/events/capture/text', authentication.ensureAuthenticated,  events.capture.text.get);
+app.post('/events/text', authentication.ensureAuthenticated, events.capture.text.post);
+app.get('/events/recent', authentication.ensureAuthenticated, events.listRecent);
 
-app.get('/states/active', states.listActive);
+app.get('/states/active', authentication.ensureAuthenticated, states.listActive);
 
 http.createServer(app).listen(app.get('port'), function(){
   console.log('Express server listening on port ' + app.get('port'));
