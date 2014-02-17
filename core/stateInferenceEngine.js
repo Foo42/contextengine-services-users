@@ -6,10 +6,21 @@ module.exports = (function(){
 	var module = {};
 
 	module.attachListener = function(contextEngine){
-		var states = [];
+		var states = [
+			new module.State({
+				name:'Testing',
+				enterOn:{eventMatching:{type:'text', text:'testing'}},
+				exitOn:{eventMatching:{type:'text', text:'testing over'}}
+			}
+		)];
 
 		var listener = new module.StateInferenceEngine(states);
-		contextEngine.on('event created', listener.processEvent);	
+		contextEngine.on('event created', listener.processEvent);
+
+		listener.on('stateChange.activated', function(event){contextEngine.registerNewEvent(event,function(){})});
+		listener.on('stateChange.deactivated', function(event){contextEngine.registerNewEvent(event,function(){})});
+
+		contextEngine.states = listener;
 	}
 
 	module.StateInferenceEngine = function(states){

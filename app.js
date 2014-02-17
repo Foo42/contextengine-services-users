@@ -8,6 +8,7 @@ var express = require('express')
   , contextEngine = require('./core/contextEngine').createContextEngine()
   , user = require('./routes/user')
   , events = require('./routes/events')(contextEngine)
+  , states = require('./routes/states')(contextEngine)
   , http = require('http')
   , path = require('path');
 
@@ -36,6 +37,8 @@ app.get('/users', user.list);
 app.get('/events/capture/text', events.capture.text.get);
 app.post('/events/text', events.capture.text.post);
 app.get('/events/recent', events.listRecent);
+
+app.get('/states/active', states.listActive);
 
 http.createServer(app).listen(app.get('port'), function(){
   console.log('Express server listening on port ' + app.get('port'));
