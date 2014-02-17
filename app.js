@@ -3,11 +3,13 @@
  * Module dependencies.
  */
 
+var isOfflineMode = process.env['OFFLINE_MODE'] && process.env['OFFLINE_MODE'].toLowerCase() == 'true';
+
 var express = require('express')
   , routes = require('./routes')
   , contextEngine = require('./core/contextEngine').createContextEngine()
   , user = require('./routes/user')
-  , authentication = require('./authentication').initialise()
+  , authentication = isOfflineMode ? require('./fakeAuthentication').initialise() : require('./authentication').initialise()
   , events = require('./routes/events')(contextEngine)
   , states = require('./routes/states')(contextEngine)
   , http = require('http')
