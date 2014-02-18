@@ -28,26 +28,21 @@ var initialise = function(getContextEngineForUser){
 
 	var ensureAuthenticated = function(req, res, next) {
 			console.log("ensureAuthenticated: " + req.isAuthenticated)
-			if (req.isAuthenticated()) 
-				{ return next(); }
+			if (req.isAuthenticated()){
+				getContextEngineForUser(function(err, engine){
+					if(!err){
+						req.user.contextEngine = engine;
+						return next();		
+					}
+				});
+			}
+
 		  	res.redirect('/login');
 		};
 
 	var userHasEmailAddressOf = function(user, address){
 		return user.emails.filter(function(email){return email.value.toLowerCase() == address.toLowerCase()}).length > 0;
 	}
-
-	var ensureRegisteredUser = function(req, res, next){
-		if (req.isAuthenticated()){ 
-			console.log("request authenticated");
-			console.log("user object:" + JSON.stringify(req.user));
-
-			if(registeredUsers.isRegisteredUser(req.user)){
-				return next();	
-			}
-		}
-	  	res.redirect('/login');
-	};
 
 	return 	{
 		insertMiddleware: function(app){
@@ -86,7 +81,6 @@ var initialise = function(getContextEngineForUser){
 		},
 
 		ensureAuthenticated: ensureAuthenticated,
-		ensureRegisteredUser: ensureRegisteredUser
 	};
 
 };

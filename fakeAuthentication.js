@@ -1,6 +1,4 @@
-
 var initialise = function(getContextEngineForUser){
-
 	return 	{
 		insertMiddleware: function(app){
 		},
@@ -12,6 +10,9 @@ var initialise = function(getContextEngineForUser){
 			req.user = req.user || {};
 			
 			getContextEngineForUser('someone', function(err, engine){
+				if(err){
+					return;
+				}
 				req.user.contextEngine = engine;
 			});
 

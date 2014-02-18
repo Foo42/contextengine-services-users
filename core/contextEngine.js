@@ -3,10 +3,9 @@ var EventEmitter = require('events').EventEmitter;
 var fileAppendingEventListener = require('./fileAppendingEventListener');
 var eventInferenceEngine = require('./eventInferenceEngine');
 
+
 module.exports = (function(){
 	var module = {};
-
-
 
 	module.createContextEngine = function(){
 		var contextEngine = new module.ContextEngine();
@@ -25,10 +24,12 @@ module.exports = (function(){
 	}
 
 	module.createContextEnginesForRegisteredUsers = function(){
-		var onlyContextEngine = module.createContextEngine();
+		var engines = {};
 		return {
 			getContextEngineForUser:function(user, done){
-				done(null, onlyContextEngine);
+				//Create engines on demand for now. No persistance etc.
+				engines[user] = engines[user] || module.createContextEngine();
+				done(null, engines[user]);
 			}
 		}
 	}
