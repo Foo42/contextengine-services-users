@@ -13,7 +13,9 @@ var initialise = function(getContextEngineForUser){
 
 	passport.deserializeUser(function(obj, done) {
 	  //attach context engine here?
+	  console.log("deserializeUser: " + JSON.stringify(obj));
 	  done(null, obj);
+	  	  
 	});
 
 	passport.use(new GoogleStrategy({
@@ -26,19 +28,30 @@ var initialise = function(getContextEngineForUser){
 	  }
 	));
 
-	var ensureAuthenticated = function(req, res, next) {
-			console.log("ensureAuthenticated: " + req.isAuthenticated)
-			if (req.isAuthenticated()){
-				getContextEngineForUser(function(err, engine){
+	var ensureAuthenticated = function(req, res, next) {			
+		console.log('in ensureAuthenticated');
+		if (req.isAuthenticated()){
+			registeredUsers.findUser(req.user, function(err, user){
+			  	if(err){
+			  		console.log('did not find user ' + JSON.stringify(user))
+			  		return err;
+			  	}
+
+				getContextEngineForUser(req.user, function(err, engine){
 					if(!err){
+						console.log('got context engine for user')
 						req.user.contextEngine = engine;
 						return next();		
 					}
-				});
-			}
+				});  	
+		  	});			
+		} else {
+			console.log('isAuthenticated failed')
+		}
 
-		  	res.redirect('/login');
-		};
+
+	  	res.redirect('/login');
+	};
 
 	var userHasEmailAddressOf = function(user, address){
 		return user.emails.filter(function(email){return email.value.toLowerCase() == address.toLowerCase()}).length > 0;

@@ -57,6 +57,18 @@ describe('State', function(){
 	  		});
 	  	});
 
+	  	// describe('on after seconds', function(){
+	  	// 	it('should become inactive after delay in seconds specified', function(done){
+	  	// 		var stateConfig = {enterOn:{eventMatching:{text:'enter'}}, exitOn:{delayElapsed:{seconds:5}}};
+	  	// 		var mockTaskScheduler = 
+	  	// 		var state = new StateInferenceEngine.State(stateConfig);
+	  	// 		state.processEvent({text:'enter'});
+	  	// 		assert.equal(state.active, true, 'did not start active');
+	  							
+	  	// 		//need way to mock out setTimeout one way or another
+	  	// 	});
+	  	// });
+
 	  	it('should raise an event when becomes inactive', function(done){	  			
   			var stateConfig = {exitOn:{eventMatching:{}}};
   			var eventFired  = false;
