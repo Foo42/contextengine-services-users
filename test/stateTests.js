@@ -1,6 +1,22 @@
 var assert = require("assert");
 var StateInferenceEngine = require('../core/stateInferenceEngine');
 
+var createMockScheduler = function createMockScheduler(){
+	var mockScheduler = {};
+	mockScheduler.requestedTimeout = {};
+	mockScheduler.setTimeout = function(callback, timeout){
+		mockScheduler.requestedTimeout.callback = callback;
+		mockScheduler.requestedTimeout.milliseconds = timeout;
+		return 42;//some timeout id
+	};
+
+	mockScheduler.clearTimeout = function(id){
+		mockScheduler.requestedTimeout.wasCleared = true;
+	};
+
+	return mockScheduler;
+}
+
 describe('State', function(){ 
 
   	describe('State entry', function(){  
@@ -60,22 +76,18 @@ describe('State', function(){
 	  	describe('time delay exit conditions', function(){
 	  		it('should become inactive after delay in seconds specified', function(done){
 	  			
-	  			var timeoutRequested, timeoutCallback;
-	  			var mockSetTimeout = function(callback, timeout){
-	  				timeoutCallback = callback;
-	  				timeoutRequested = timeout;
-	  			}
+	  			var mockScheduler = createMockScheduler();
 
 	  			var stateConfig = {
 	  				enterOn:{eventMatching:{text:'enter'}},
 	  				exitOn:{afterDelay:{seconds:5}}
 	  			};
-	  			var state = new StateInferenceEngine.State(stateConfig, {setTimeout:mockSetTimeout});
+	  			var state = new StateInferenceEngine.State(stateConfig, mockScheduler);
 	  			
 	  			state.processEvent({text:'enter'});
-	  			assert.equal(timeoutRequested, 5000, "state did not set timeout, or set it with incorrect time");
+	  			assert.equal(mockScheduler.requestedTimeout.milliseconds, 5000, "state did not set timeout, or set it with incorrect time");
 
-	  			timeoutCallback();
+	  			mockScheduler.requestedTimeout.callback();
 	  			assert.equal(state.active, false, "firing callback registered with timeout did not deactive state");
 	  			done();
 	  		});
@@ -114,11 +126,7 @@ describe('State', function(){
 	  			});
 
 	  			it('should exit on any afterDelay timeout elapsing', function(done){
-	  				var timeoutRequested, timeoutCallback;
-		  			var mockSetTimeout = function(callback, timeout){
-		  				timeoutCallback = callback;
-		  				timeoutRequested = timeout;
-		  			}
+	  				var mockScheduler = createMockScheduler();
 
 	  				var config = {
 			  			enterOn:{eventMatching:{text:'enter'}},
@@ -132,21 +140,47 @@ describe('State', function(){
 			  			}
 			  		};
 
-			  		var timeoutRequested, timeoutCallback;
-		  			var mockSetTimeout = function(callback, timeout){
-		  				timeoutCallback = callback;
-		  				timeoutRequested = timeout;
-		  			}
-
-			  		var state = new StateInferenceEngine.State(config, {setTimeout:mockSetTimeout});
+			  		var state = new StateInferenceEngine.State(config, mockScheduler);
 			  		
 			  		//Act
 			  		state.activate();
 
-			  		assert.equal(timeoutRequested, 5000, "state did not set timeout, or set it with incorrect time");
+			  		assert.equal(mockScheduler.requestedTimeout.milliseconds, 5000, "state did not set timeout, or set it with incorrect time");
 
-		  			timeoutCallback();
+		  			mockScheduler.requestedTimeout.callback();
 		  			assert.equal(state.active, false, "firing callback registered with timeout did not deactive state");
+		  			done();
+	  			});
+
+				it('should cancle any exit timeouts created with scheduler when exiting due to other condition', function(done){
+	  				var timeoutRequested, timeoutCallback;
+		  			var mockSetTimeout = function(callback, timeout){
+		  				timeoutCallback = callback;
+		  				timeoutRequested = timeout;
+		  				return 42;//some timeout id
+		  			}
+
+		  			var mockScheduler = createMockScheduler();		  			
+
+	  				var config = {
+			  			enterOn:{eventMatching:{text:'enter'}},
+			  			exitOn:{
+			  				anyOf:[
+			  					{eventMatching:{text:'exit'}},
+			  					{afterDelay:{seconds:5}}
+			  				]
+			  			}
+			  		};
+
+			  		var state = new StateInferenceEngine.State(config, mockScheduler);
+			  		
+			  		//Act
+			  		state.activate();			  		
+			  		assert.equal(mockScheduler.requestedTimeout.milliseconds, 5000, 'callback not set in the first place');
+			  		state.processEvent({text:'exit'});
+			  		assert.equal(state.active, false, 'state did not exit when it should');
+			  		assert.equal(mockScheduler.requestedTimeout.wasCleared, true, "timeout was not cleared when state exited");
+		  			
 		  			done();
 	  			});
 	  		});

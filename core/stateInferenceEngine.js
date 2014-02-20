@@ -55,18 +55,26 @@ module.exports = (function(){
             get:function(){return config.name},            
         });
 
-        (function(){
-        	var setupAnyExitTimeouts = function(config){
-        		var timeouts = getAllExitConditionsOfType(config, 'afterDelay');
-        		timeouts.forEach(function(timeout){
-        			taskScheduler.setTimeout(self.deactivate, 1000 * timeout.seconds);
+        var setup = function setup(){
+        	var timeouts = [];
+        	var setupAnyExitTimeouts = function setupAnyExitTimeouts(config){
+        		var timeoutConditions = getAllExitConditionsOfType(config, 'afterDelay');
+        		timeoutConditions.forEach(function(timeout){
+        			timeouts.push(taskScheduler.setTimeout(self.deactivate, 1000 * timeout.seconds));
         		});
         	}
 
         	self.on('activated', function(){
 	        	setupAnyExitTimeouts(config);	        	
         	});
-        })();	
+
+        	self.on('deactivated', function(){
+        		console.log('deactivated. ' + timeouts.length + " active timeouts to clear");
+        		timeouts.forEach(function(timeout){taskScheduler.clearTimeout(timeout)});
+        		timeouts = [];
+        	})
+        };
+        setup();	
 
 		var matchesEntryConditions = function(event){
 			if(!config.enterOn || !config.enterOn.eventMatching){return;}
