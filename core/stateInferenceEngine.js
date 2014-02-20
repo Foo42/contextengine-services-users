@@ -1,18 +1,20 @@
 var objectMatches = require('./objectMatches');
 var util = require('util');
 var EventEmitter = require('events').EventEmitter;
+var _ = require('lodash');
 
 module.exports = (function(){
 	var module = {};
 
 	module.attachListener = function(contextEngine){
-		var states = [
-			new module.State({
+		var stateConfigs = [{
 				name:'Testing',
 				enterOn:{eventMatching:{type:'text', text:'testing'}},
 				exitOn:{eventMatching:{type:'text', text:'testing over'}}
-			}
-		)];
+			}];
+
+		var taskScheduler = {setTimeout:setTimeout};
+		var states = stateConfigs.map(function(stateConfig){new module.State(stateConfig, taskScheduler)});			
 
 		var listener = new module.StateInferenceEngine(states);
 		contextEngine.on('event created', listener.processEvent);
@@ -46,12 +48,25 @@ module.exports = (function(){
 		}
 	};
 
-	module.State = function(config){
+	module.State = function(config, taskScheduler){
 		var self = this;
 
 		Object.defineProperty(this, "name", {
             get:function(){return config.name},            
-        });		
+        });
+
+        (function(){
+        	var setupAnyExitTimeouts = function(config){
+        		var timeouts = getAllExitConditionsOfType(config, 'afterDelay');
+        		timeouts.forEach(function(timeout){
+        			taskScheduler.setTimeout(self.deactivate, 1000 * timeout.seconds);
+        		});
+        	}
+
+        	self.on('activated', function(){
+	        	setupAnyExitTimeouts(config);	        	
+        	});
+        })();	
 
 		var matchesEntryConditions = function(event){
 			if(!config.enterOn || !config.enterOn.eventMatching){return;}
@@ -59,10 +74,31 @@ module.exports = (function(){
 			return objectMatches(event, config.enterOn.eventMatching);			
 		}
 
-		var matchesExitConditions = function(event){
-			if(!config.exitOn || !config.exitOn.eventMatching){return;}
+		var getAllExitConditionsOfType = function(config, type){
+			if(!config.exitOn){
+				return [];
+			}
 
-			return objectMatches(event, config.exitOn.eventMatching);
+			var exitConditionsOfType = [];
+			if(config.exitOn[type]){
+				exitConditionsOfType.push(config.exitOn[type]);
+			}
+			if(config.exitOn.anyOf){
+				exitConditionsOfType = exitConditionsOfType.concat(
+					config.exitOn.anyOf
+						.filter(function(condition){return condition[type]})
+						.map(function(matcher){return matcher[type]}));
+			}
+
+			return exitConditionsOfType;
+		}
+
+		var matchesExitConditions = function(event){
+			var exitMatchers = getAllExitConditionsOfType(config, 'eventMatching');
+			
+			console.log('exitMatchers: ' + JSON.stringify(exitMatchers));
+			return _.any(exitMatchers, function(matcher){return objectMatches(event, matcher)});
+
 		}
 
 		self.activate = function(){
