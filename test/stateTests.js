@@ -14,6 +14,21 @@ var createMockScheduler = function createMockScheduler(){
 		mockScheduler.requestedTimeout.wasCleared = true;
 	};
 
+	mockScheduler.createCronJob= function(cronSpec, callback){
+		mockScheduler.requestedCronJob = {};
+		mockScheduler.requestedCronJob.spec = cronSpec;
+		mockScheduler.requestedCronJob.callback = callback;
+
+		return {
+			start:function(){
+				mockScheduler.requestedCronJob.active = true;
+			},
+			stop:function(){
+				mockScheduler.requestedCronJob.active = false;
+			}
+		}
+	}
+
 	return mockScheduler;
 }
 
@@ -89,6 +104,30 @@ describe('State', function(){
 
 	  			mockScheduler.requestedTimeout.callback();
 	  			assert.equal(state.active, false, "firing callback registered with timeout did not deactive state");
+	  			done();
+	  		});
+	  	});
+
+	  	describe('cron exit conditions', function(){
+	  		it('should schedule cron task for exit with scheduler when created', function(done){
+	  			
+	  			var mockScheduler = createMockScheduler();
+
+	  			var stateConfig = {
+	  				enterOn:{eventMatching:{text:'enter'}},
+	  				exitOn:{cron:'00 26 12 * * *'}
+	  			};
+
+	  			var state = new StateInferenceEngine.State(stateConfig, mockScheduler);
+	  			
+	  			state.processEvent({text:'enter'});
+
+	  			assert.ok(mockScheduler.requestedCronJob, 'no cron job was set');
+	  			assert.equal(mockScheduler.requestedCronJob.spec, '00 26 12 * * *', 'did not set cron spec');
+	  			assert.equal(mockScheduler.requestedCronJob.active, true, 'cron job was never activated')
+
+	  			mockScheduler.requestedCronJob.callback();
+	  			assert.equal(state.active, false, 'cron callback did not cause state to deactivate');
 	  			done();
 	  		});
 	  	});
