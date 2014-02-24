@@ -2,13 +2,15 @@ var util = require('util');
 var EventEmitter = require('events').EventEmitter;
 var fileAppendingEventListener = require('./fileAppendingEventListener');
 var eventInferenceEngine = require('./eventInferenceEngine');
+var path = require('path');
 
 
 module.exports = (function(){
 	var module = {};
 
-	module.createContextEngine = function(){
+	module.createContextEngine = function(user){
 		var contextEngine = new module.ContextEngine();
+		contextEngine.userDataPath = path.join(path.dirname(require.main.filename),'data','userSpecific', user.id);
 		
 		var listeners = [
 			'fileAppendingEventListener',
@@ -28,7 +30,7 @@ module.exports = (function(){
 		return {
 			getContextEngineForUser:function(user, done){
 				//Create engines on demand for now. No persistance etc.
-				engines[user] = engines[user] || module.createContextEngine();
+				engines[user] = engines[user] || module.createContextEngine(user);
 				done(null, engines[user]);
 			}
 		}
