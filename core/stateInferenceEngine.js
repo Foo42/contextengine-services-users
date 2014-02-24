@@ -14,7 +14,7 @@ module.exports = (function(){
 			}];
 
 		var taskScheduler = {setTimeout:setTimeout};
-		var states = stateConfigs.map(function(stateConfig){new module.State(stateConfig, taskScheduler)});			
+		var states = stateConfigs.map(function(stateConfig){return new module.State(stateConfig, taskScheduler)});			
 
 		var listener = new module.StateInferenceEngine(states);
 		contextEngine.on('event created', listener.processEvent);
@@ -27,6 +27,7 @@ module.exports = (function(){
 
 	module.StateInferenceEngine = function(states){
 		var self = this;
+
 		states.forEach(function(state){
 			state.on('activated', function(){
 				var stateActivedEvent = {type:'stateChange.activated', stateName:state.name};
@@ -108,7 +109,7 @@ module.exports = (function(){
 
 		self.active = false;
 
-		        var setup = function setup(){
+		    var setup = function setup(){
         	var timeouts = [];
         	var exitCrons = [];
         	var setupAnyExitTimeouts = function setupAnyExitTimeouts(config){

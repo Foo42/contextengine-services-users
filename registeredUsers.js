@@ -16,15 +16,17 @@ var userHasEmailAddressOf = function(user, address){
 	return user.emails.filter(function(email){return email.value.toLowerCase() == address.toLowerCase()}).length > 0;
 }
 
-module.export = {findUser: function(user, done){
-	console.log("finding user for: " + JSON.stringify(user));
-	var foundUser = _.any(users, function(registeredUser){
-		return userHasEmailAddressOf(user, registeredUser.emailAddress);
-	});
+module.exports = {
+	findUser: function(user, done){
+		console.log("finding user for: " + JSON.stringify(user));
+		var foundUser = _.any(users, function(registeredUser){
+			return userHasEmailAddressOf(user, registeredUser.emailAddress);
+		});
 
-	if(!foundUser){
-		done(err);
-	}else{
-		done(null, user);
+		if(!foundUser){
+			done(err);
+		}else{
+			done(null, user);
+		}
 	}
-}}
+}

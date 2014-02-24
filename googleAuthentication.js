@@ -8,14 +8,14 @@ var initialise = function(getContextEngineForUser){
 	 var clientID = process.env['GOOGLE_CLIENT_ID'];
 
 	passport.serializeUser(function(user, done) {
+	  console.log('in serializeUser. user = ' + JSON.stringify(user));
 	  done(null, user);
 	});
 
 	passport.deserializeUser(function(obj, done) {
 	  //attach context engine here?
 	  console.log("deserializeUser: " + JSON.stringify(obj));
-	  done(null, obj);
-	  	  
+	  done(null, obj);	  	  
 	});
 
 	passport.use(new GoogleStrategy({
@@ -24,12 +24,14 @@ var initialise = function(getContextEngineForUser){
 	    callbackURL: "http://"+hostName+"/auth/google/callback"
 	  },
 	  function(accessToken, refreshToken, profile, done) {
+	    console.log('in thingy. profile = ' + JSON.stringify(profile));
 	    return done(null, profile);	    
 	  }
 	));
 
 	var ensureAuthenticated = function(req, res, next) {			
 		console.log('in ensureAuthenticated');
+		console.log("auth " + req.isAuthenticated);
 		if (req.isAuthenticated()){
 			registeredUsers.findUser(req.user, function(err, user){
 			  	if(err){
@@ -46,11 +48,10 @@ var initialise = function(getContextEngineForUser){
 				});  	
 		  	});			
 		} else {
-			console.log('isAuthenticated failed')
+			console.log('isAuthenticated failed');
+			res.redirect('/login');
 		}
-
-
-	  	res.redirect('/login');
+	  	
 	};
 
 	var userHasEmailAddressOf = function(user, address){
