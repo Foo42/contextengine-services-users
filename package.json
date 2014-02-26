@@ -21,7 +21,8 @@
     "grunt": "~0.4.2",
     "grunt-contrib-watch": "~0.5.3",
     "grunt-notify": "~0.2.17",
-    "grunt-mocha-test": "~0.8.2"
+    "grunt-mocha-test": "~0.8.2",
+    "proxyquire": "~0.5.2"
   },
   "scripts": {
     "test": "grunt test"
