@@ -24,7 +24,7 @@ module.exports = {
 		});
 
 		if(!foundUser){
-			done(err);
+			done("ERROR: user not found");
 		}else{
 			done(null, user);
 		}
