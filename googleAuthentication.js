@@ -30,8 +30,6 @@ var initialise = function(getContextEngineForUser){
 	));
 
 	var ensureAuthenticated = function(req, res, next) {			
-		console.log('in ensureAuthenticated');
-		console.log("auth " + req.isAuthenticated);
 		if (req.isAuthenticated()){
 			registeredUsers.findUser(req.user, function(err, user){
 			  	if(err){
@@ -41,7 +39,6 @@ var initialise = function(getContextEngineForUser){
 
 				getContextEngineForUser(req.user, function(err, engine){
 					if(!err){
-						console.log('got context engine for user')
 						req.user.contextEngine = engine;
 						return next();		
 					}

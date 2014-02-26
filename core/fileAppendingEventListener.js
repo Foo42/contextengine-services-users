@@ -5,9 +5,10 @@ var mkdirp = require('mkdirp');
 module.exports = (function(){
 	var module = {};
 
-	module.attachListener = function(contextEngine){
+	module.attachListener = function(contextEngine, done){
 		var listener = new module.FileAppendingEventListener(contextEngine);
-		contextEngine.on('event created', listener.persistEvent);	
+		contextEngine.on('event created', listener.persistEvent);
+		return done(null);	
 	}
 
 	module.FileAppendingEventListener = function(contextEngine){
@@ -17,11 +18,17 @@ module.exports = (function(){
 		
 		self.persistEvent = function(event){
 			mkdirp(rootDir,function(err){
-				if(err){throw err;}
+				if(err){
+					console.log(err);
+					throw err;
+				}
 
 				var lineToAppend = JSON.stringify(event);
 				fs.appendFile(fileName, lineToAppend, function (err) {
-					if(err){console.error(err)}
+					if(err){
+						console.error(err)
+						throw err;
+					}
 				});
 			});				
 		}

@@ -6,7 +6,7 @@ var _ = require('lodash');
 module.exports = (function(){
 	var module = {};
 
-	module.attachListener = function(contextEngine){
+	module.attachListener = function(contextEngine, done){
 		var stateConfigs = [{
 				name:'Testing',
 				enterOn:{eventMatching:{type:'text', text:'testing'}},
@@ -23,6 +23,7 @@ module.exports = (function(){
 		listener.on('stateChange.deactivated', function(event){contextEngine.registerNewEvent(event,function(){})});
 
 		contextEngine.states = listener;
+		return done(null);
 	}
 
 	module.StateInferenceEngine = function(states){

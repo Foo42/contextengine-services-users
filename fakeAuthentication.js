@@ -9,14 +9,16 @@ var initialise = function(getContextEngineForUser){
 		ensureAuthenticated: function(req, res, next){
 			req.user = req.user || {};
 			
-			getContextEngineForUser('someone', function(err, engine){
+			getContextEngineForUser({id:'someone'}, function(err, engine){
 				if(err){
+					console.log('error getting context engine for user');
 					return;
 				}
 				req.user.contextEngine = engine;
+				next();
 			});
 
-			next();
+			
 		},
 		ensureAdministrator: function(req, res, next){next()}
 	};
