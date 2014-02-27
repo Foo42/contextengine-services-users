@@ -12,34 +12,42 @@ var getValidDataPathForUser = function getValidDataPathForUser(user, done){
 	});
 }
 
+var attachAllListeners = function attachAllListeners(contextEngine, done){
+	var listeners = [
+		'fileAppendingEventListener',
+		'stateInferenceEngine'];
+	
+	async.eachSeries(
+		listeners, 
+		function(listenerName, done){
+			var module = require('./'+listenerName);
+			module.attachListener(contextEngine, done);
+		},
+		function(err){
+			done(err, contextEngine);
+		}
+	);
+}
+
 module.exports = (function(){
 	var module = {};
 
+	
+
 	module.createContextEngine = function(user, done){
 		var contextEngine = new module.ContextEngine();
-		
-		getValidDataPathForUser(user, function(err, userDataPath){
-			if(err){
-				return done(err);
-			}
 
-			contextEngine.userDataPath = userDataPath;
-
-			var listeners = [
-				'fileAppendingEventListener',
-				'stateInferenceEngine'];
-			
-			async.eachSeries(
-				listeners, 
-				function(listenerName, done){
-					var module = require('./'+listenerName);
-					module.attachListener(contextEngine, done);
+		async.waterfall(
+			[
+				function(callback){getValidDataPathForUser(user, callback);},
+				function(userDataPath, callback){
+					contextEngine.userDataPath = userDataPath;
+					callback(null,contextEngine);							
 				},
-				function(err){
-					done(err, contextEngine);
-				}
-			);
-		});
+				attachAllListeners
+			],
+			done
+		);
 	}
 
 	module.createContextEnginesForRegisteredUsers = function(){
