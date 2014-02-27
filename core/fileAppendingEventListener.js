@@ -1,6 +1,6 @@
 var fs = require('fs');
 var path = require('path');
-var mkdirp = require('mkdirp');
+
 
 module.exports = (function(){
 	var module = {};
@@ -13,24 +13,16 @@ module.exports = (function(){
 
 	module.FileAppendingEventListener = function(contextEngine){
 		var self = this;
-		var rootDir = contextEngine.userDataPath;
-		var fileName = path.join(rootDir, 'eventLog.txt');
+		var fileName = path.join(contextEngine.userDataPath, 'eventLog.txt');
 		
 		self.persistEvent = function(event){
-			mkdirp(rootDir,function(err){
+			var lineToAppend = JSON.stringify(event);
+			fs.appendFile(fileName, lineToAppend, function (err) {
 				if(err){
-					console.log(err);
+					console.error(err)
 					throw err;
 				}
-
-				var lineToAppend = JSON.stringify(event);
-				fs.appendFile(fileName, lineToAppend, function (err) {
-					if(err){
-						console.error(err)
-						throw err;
-					}
-				});
-			});				
+			});
 		}
 	};
 

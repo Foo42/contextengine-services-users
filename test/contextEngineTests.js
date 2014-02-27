@@ -1,9 +1,37 @@
 var assert = require("assert")
 var ContextEngine = require('../core/contextEngine').ContextEngine;
+var proxyquire = require('proxyquire');
+var path = require('path');
+
+var pathEndsWith = function pathEndsWith(p, ending){
+	var pParts = p.split(path.sep);	
+	var endingParts = ending.split(path.sep);
+
+	while(ending.length > 0){
+		if(pParts.pop() != endingParts.pop()){
+			return false;
+		}
+		return true;
+	}
+	return p.length === 0;
+}
 
 describe('ContextEngine', function(){
   var contextEngine = new ContextEngine();
-  
+
+  describe('creating context engines', function(){
+  	it('should ensure that a directory exists for user', function(done){
+		var mock_mkdirp = function(dirToCreate){			
+			assert.ok(pathEndsWith(dirToCreate, "data/userSpecific/someone"));
+			done();
+		};
+		var contextEngineModule = proxyquire('../core/contextEngine',{'mkdirp':mock_mkdirp});
+
+		var someUser = {id:'someone'};
+		contextEngineModule.createContextEngine(someUser,function(){});
+	});
+  });
+
   describe('registering event', function(){  
   	
   	it('should emit event created for registered event', function(done){
@@ -19,8 +47,7 @@ describe('ContextEngine', function(){
   			done();
   		});
 	});
-
-  	
+ 	
 
   	describe("metadata", function(){
   		describe("timestamping", function(){

@@ -2,30 +2,44 @@ var util = require('util');
 var EventEmitter = require('events').EventEmitter;
 var fileAppendingEventListener = require('./fileAppendingEventListener');
 var path = require('path');
+var mkdirp = require('mkdirp');
 var async = require('async');
 
+var getValidDataPathForUser = function getValidDataPathForUser(user, done){
+	var userDataPath = path.join(path.dirname(require.main.filename),'data','userSpecific', user.id);
+	mkdirp(userDataPath,function(err){
+		done(err, userDataPath);
+	});
+}
 
 module.exports = (function(){
 	var module = {};
 
 	module.createContextEngine = function(user, done){
 		var contextEngine = new module.ContextEngine();
-		contextEngine.userDataPath = path.join(path.dirname(require.main.filename),'data','userSpecific', user.id);
 		
-		var listeners = [
-			'fileAppendingEventListener',
-			'stateInferenceEngine'];
-		
-		async.eachSeries(
-			listeners, 
-			function(listenerName, done){
-				var module = require('./'+listenerName);
-				module.attachListener(contextEngine, done);
-			},
-			function(err){
-				done(err, contextEngine);
+		getValidDataPathForUser(user, function(err, userDataPath){
+			if(err){
+				return done(err);
 			}
-		);
+
+			contextEngine.userDataPath = userDataPath;
+
+			var listeners = [
+				'fileAppendingEventListener',
+				'stateInferenceEngine'];
+			
+			async.eachSeries(
+				listeners, 
+				function(listenerName, done){
+					var module = require('./'+listenerName);
+					module.attachListener(contextEngine, done);
+				},
+				function(err){
+					done(err, contextEngine);
+				}
+			);
+		});
 	}
 
 	module.createContextEnginesForRegisteredUsers = function(){
