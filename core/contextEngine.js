@@ -32,10 +32,10 @@ var attachAllListeners = function attachAllListeners(contextEngine, done){
 module.exports = (function(){
 	var module = {};
 
-	
 
 	module.createContextEngine = function(user, done){
 		var contextEngine = new module.ContextEngine();
+		contextEngine.user = user;
 
 		async.waterfall(
 			[

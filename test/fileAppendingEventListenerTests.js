@@ -9,7 +9,6 @@ describe('fileAppendingEventListener', function(){
 
 			var mock_fs = {
 				appendFile:function(filename, content, callback){
-					console.log('appending file');
 					assert.equal(filename, '/foo/bar/eventLog.txt');
 					assert.equal(content, JSON.stringify(eventToSend));
 					done();

@@ -2,31 +2,37 @@ var objectMatches = require('./objectMatches');
 var util = require('util');
 var EventEmitter = require('events').EventEmitter;
 var _ = require('lodash');
+var userConfigurationAccess = require('./userConfigurationAccess');
+var async = require('async');
 
 module.exports = (function(){
 	var module = {};
 
 	module.attachListener = function(contextEngine, done){
-		var stateConfigs = [{
-				name:'Testing',
-				enterOn:{eventMatching:{type:'text', text:'testing'}},
-				exitOn:{eventMatching:{type:'text', text:'testing over'}}
-			}];
+		console.info('attatching state inference engine');
+		var userConfig = userConfigurationAccess.forUser(contextEngine.user);
+		async.waterfall(
+			[
+				userConfig.getStateConfig,
+				function(stateConfigs, done){
+					var taskScheduler = {setTimeout:setTimeout, clearTimeout:clearTimeout};
+					var states = stateConfigs.states.map(function(stateConfig){return new module.State(stateConfig, taskScheduler)});			
 
-		var taskScheduler = {setTimeout:setTimeout};
-		var states = stateConfigs.map(function(stateConfig){return new module.State(stateConfig, taskScheduler)});			
+					var listener = new module.StateInferenceEngine(states);
+					contextEngine.on('event created', listener.processEvent);
 
-		var listener = new module.StateInferenceEngine(states);
-		contextEngine.on('event created', listener.processEvent);
+					listener.on('stateChange.activated', function(event){contextEngine.registerNewEvent(event,function(){})});
+					listener.on('stateChange.deactivated', function(event){contextEngine.registerNewEvent(event,function(){})});
 
-		listener.on('stateChange.activated', function(event){contextEngine.registerNewEvent(event,function(){})});
-		listener.on('stateChange.deactivated', function(event){contextEngine.registerNewEvent(event,function(){})});
-
-		contextEngine.states = listener;
-		return done(null);
+					contextEngine.states = listener;
+					done(null)			
+				}
+			],
+			done
+		);
 	}
 
-	module.StateInferenceEngine = function(states){
+	module.StateInferenceEngine = function(states){		
 		var self = this;
 
 		states.forEach(function(state){
@@ -51,6 +57,7 @@ module.exports = (function(){
 	};
 
 	module.State = function(config, taskScheduler){
+		console.info('creating state');
 		var self = this;
 
 		Object.defineProperty(this, "name", {
@@ -91,11 +98,13 @@ module.exports = (function(){
 
 		self.activate = function(){
 			self.active = true;
+			console.info('activating state ' + (self.name || 'unnamed'));
 			self.emit('activated')
 		}
 
 		self.deactivate = function(){
 			self.active = false;
+			console.info('deactivating state ' + (self.name || 'unnamed'));
 			self.emit('deactivated')
 		}
 
@@ -134,7 +143,6 @@ module.exports = (function(){
         	});
 
         	self.on('deactivated', function(){
-        		console.log('deactivated. ' + timeouts.length + " active timeouts to clear");
         		timeouts.forEach(function(timeout){taskScheduler.clearTimeout(timeout)});
         		timeouts = [];
         	})

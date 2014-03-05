@@ -2,19 +2,7 @@ var assert = require("assert")
 var ContextEngine = require('../core/contextEngine').ContextEngine;
 var proxyquire = require('proxyquire');
 var path = require('path');
-
-var pathEndsWith = function pathEndsWith(p, ending){
-	var pParts = p.split(path.sep);	
-	var endingParts = ending.split(path.sep);
-
-	while(ending.length > 0){
-		if(pParts.pop() != endingParts.pop()){
-			return false;
-		}
-		return true;
-	}
-	return p.length === 0;
-}
+var pathEndsWith = require('./testUtils').pathEndsWith;
 
 describe('ContextEngine', function(){
   var contextEngine = new ContextEngine();
