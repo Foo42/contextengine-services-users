@@ -15,7 +15,8 @@
     "passport-google-oauth": "~0.1.5",
     "lodash": "~2.4.1",
     "mkdirp": "~0.3.5",
-    "async": "~0.2.9"
+    "async": "~0.2.9",
+    "cron": "~1.0.3"
   },
   "devDependencies": {
     "mocha": "~1.17.1",

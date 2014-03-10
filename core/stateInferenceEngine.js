@@ -64,23 +64,28 @@ module.exports = (function(){
             get:function(){return config.name},            
         });
 
+
         var getAllExitConditionsOfType = function(config, type){
-			if(!config.exitOn){
+			return getAllConditionsOfType(config.exitOn, type);
+		}
+
+		var getAllConditionsOfType = function(config, type){
+			if(!config){
 				return [];
 			}
 
-			var exitConditionsOfType = [];
-			if(config.exitOn[type]){
-				exitConditionsOfType.push(config.exitOn[type]);
+			var conditionsOfType = [];
+			if(config[type]){
+				conditionsOfType.push(config[type]);
 			}
-			if(config.exitOn.anyOf){
-				exitConditionsOfType = exitConditionsOfType.concat(
-					config.exitOn.anyOf
+			if(config.anyOf){
+				conditionsOfType = conditionsOfType.concat(
+					config.anyOf
 						.filter(function(condition){return condition[type]})
 						.map(function(matcher){return matcher[type]}));
 			}
 
-			return exitConditionsOfType;
+			return conditionsOfType;
 		}
 
 		var matchesEntryConditions = function(event){
@@ -93,7 +98,6 @@ module.exports = (function(){
 			var exitMatchers = getAllExitConditionsOfType(config, 'eventMatching');
 			
 			return _.any(exitMatchers, function(matcher){return objectMatches(event, matcher)});
-
 		}
 
 		self.activate = function(){
@@ -119,9 +123,11 @@ module.exports = (function(){
 
 		self.active = false;
 
-		    var setup = function setup(){
+		var setup = function setup(){
         	var timeouts = [];
         	var exitCrons = [];
+        	var entryCrons = [];
+
         	var setupAnyExitTimeouts = function setupAnyExitTimeouts(config){
         		var timeoutConditions = getAllExitConditionsOfType(config, 'afterDelay');
         		timeoutConditions.forEach(function(timeout){
@@ -137,13 +143,25 @@ module.exports = (function(){
         	}
         	setupAnyExitCronJobs(config);
 
+        	var setupAnyEntryCronJobs = function setupAnyEntryCronJobs(config){
+        		if(config.enterOn && config.enterOn.cron){
+        			var cronJob = taskScheduler.createCronJob(config.enterOn.cron, self.activate);
+        			entryCrons.push(cronJob);
+        			cronJob.start();
+        		}
+        	}
+        	setupAnyEntryCronJobs(config);
+
         	self.on('activated', function(){
-	        	setupAnyExitTimeouts(config);	        	
+	        	setupAnyExitTimeouts(config);
+	        	entryCrons.forEach(function(cronJob){cronJob.stop()});
 	        	exitCrons.forEach(function(cronJob){cronJob.start()});
         	});
 
         	self.on('deactivated', function(){
         		timeouts.forEach(function(timeout){taskScheduler.clearTimeout(timeout)});
+				exitCrons.forEach(function(cronJob){cronJob.stop()});
+        		entryCrons.forEach(function(cronJob){cronJob.start()});
         		timeouts = [];
         	})
         };

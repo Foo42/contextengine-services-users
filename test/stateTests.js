@@ -33,7 +33,6 @@ var createMockScheduler = function createMockScheduler(){
 }
 
 describe('State', function(){ 
-
   	describe('State entry', function(){  
   		describe('on events matching', function(){
 	  		it('should become active after processing an event matching the criteria', function(done){
@@ -69,6 +68,57 @@ describe('State', function(){
   			assert.ok(eventFired, 'event did not fire');
   			done();
   		});
+
+  		describe('cron entry conditions', function(){
+	  		it('should schedule cron task for entry with scheduler when created', function(done){
+	  			
+	  			var mockScheduler = createMockScheduler();
+
+	  			var stateConfig = {
+	  				enterOn:{cron:'00 26 12 * * *'}
+	  			};
+
+	  			var state = new StateInferenceEngine.State(stateConfig, mockScheduler);
+	  			
+	  			assert.ok(mockScheduler.requestedCronJob, 'no cron job was set');
+	  			assert.equal(mockScheduler.requestedCronJob.spec, '00 26 12 * * *', 'did not set cron spec');
+	  			assert.equal(mockScheduler.requestedCronJob.active, true, 'cron job was never activated')
+
+	  			mockScheduler.requestedCronJob.callback();
+	  			assert.equal(state.active, true, 'cron callback did not cause state to activate');
+	  			done();
+	  		});
+
+	  		it('should stop cron task once state active', function(done){
+	  			var mockScheduler = createMockScheduler();
+
+	  			var stateConfig = {
+	  				enterOn:{cron:'00 26 12 * * *'}
+	  			};
+
+	  			var state = new StateInferenceEngine.State(stateConfig, mockScheduler);	  		
+	  			state.activate();
+
+	  			assert.equal(mockScheduler.requestedCronJob.active, false);
+	  			done();
+	  		});
+
+	  		it('should start cron task once state deactivated', function(done){
+	  			var mockScheduler = createMockScheduler();
+
+	  			var stateConfig = {
+	  				enterOn:{cron:'00 26 12 * * *'}
+	  			};
+
+	  			var state = new StateInferenceEngine.State(stateConfig, mockScheduler);	  		
+	  			state.activate();
+
+	  			state.deactivate();
+
+	  			assert.equal(mockScheduler.requestedCronJob.active, true);
+	  			done();
+	  		});
+	  	});
   	});
 
   	describe('State exit', function(){  
@@ -128,6 +178,24 @@ describe('State', function(){
 
 	  			mockScheduler.requestedCronJob.callback();
 	  			assert.equal(state.active, false, 'cron callback did not cause state to deactivate');
+	  			done();
+	  		});
+
+	  		it('should stop any cron exit tasks when state becomes deactivated', function(done){
+	  			
+	  			var mockScheduler = createMockScheduler();
+
+	  			var stateConfig = {
+	  				enterOn:{eventMatching:{text:'enter'}},
+	  				exitOn:{cron:'00 26 12 * * *'}
+	  			};
+
+	  			var state = new StateInferenceEngine.State(stateConfig, mockScheduler);
+	  			
+	  			state.processEvent({text:'enter'});
+
+	  			state.deactivate();
+	  			assert.equal(mockScheduler.requestedCronJob.active, false);
 	  			done();
 	  		});
 	  	});
