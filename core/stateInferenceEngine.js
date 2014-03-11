@@ -121,12 +121,12 @@ module.exports = (function(){
 			}
 		}
 
-		self.active = false;
-
 		var setup = function setup(){
         	var timeouts = [];
         	var exitCrons = [];
         	var entryCrons = [];
+
+        	self.active = (config.initialState && config.initialState === 'active') || false;
 
         	var setupAnyExitTimeouts = function setupAnyExitTimeouts(config){
         		var timeoutConditions = getAllExitConditionsOfType(config, 'afterDelay');
@@ -138,7 +138,9 @@ module.exports = (function(){
         	var setupAnyExitCronJobs = function setupAnyExitCronJobs(config){
         		var cronConditions = getAllExitConditionsOfType(config, 'cron');
         		cronConditions.forEach(function(cron){
-        			exitCrons.push(taskScheduler.createCronJob(cron, self.deactivate));
+        			var cronJob = taskScheduler.createCronJob(cron, self.deactivate);
+        			exitCrons.push(cronJob);
+        			if(self.active){cronJob.start()};
         		})
         	}
         	setupAnyExitCronJobs(config);
@@ -147,7 +149,7 @@ module.exports = (function(){
         		if(config.enterOn && config.enterOn.cron){
         			var cronJob = taskScheduler.createCronJob(config.enterOn.cron, self.activate);
         			entryCrons.push(cronJob);
-        			cronJob.start();
+        			if(!self.active){cronJob.start()};
         		}
         	}
         	setupAnyEntryCronJobs(config);
@@ -163,7 +165,7 @@ module.exports = (function(){
 				exitCrons.forEach(function(cronJob){cronJob.stop()});
         		entryCrons.forEach(function(cronJob){cronJob.start()});
         		timeouts = [];
-        	})
+        	});        	
         };
         setup();
 	}

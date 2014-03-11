@@ -33,6 +33,29 @@ var createMockScheduler = function createMockScheduler(){
 }
 
 describe('State', function(){ 
+	describe('Initial State', function(){
+		it('should should start in inactive state if no "initialState" is specified in config',function(done){
+			var stateConfig = {name:'some state', enterOn:{eventMatching:{text:'hammer time'}}};
+			var state = new StateInferenceEngine.State(stateConfig);
+			assert.equal(state.active, false);
+			done();
+		});
+
+		it('should should start in state defined by "initialState" if specified in config',function(done){
+			var defaultActiveConfig = {name:'some state which should be active', initialState:'active', enterOn:{eventMatching:{text:'hammer time'}}};
+			var defaultInactiveConfig = {name:'some other state which should be inactive', initialState:'inactive', enterOn:{eventMatching:{text:'hammer time'}}};
+			
+			var shouldBeActiveState = new StateInferenceEngine.State(defaultActiveConfig);
+			assert.equal(shouldBeActiveState.active, true, 'state should be active by default as specified in config');
+
+
+			var shouldBeInactiveState = new StateInferenceEngine.State(defaultInactiveConfig);
+			assert.equal(shouldBeInactiveState.active, false, 'state should be inactive by default as specified in config');
+
+			done();
+		});
+	});
+
   	describe('State entry', function(){  
   		describe('on events matching', function(){
 	  		it('should become active after processing an event matching the criteria', function(done){
@@ -66,7 +89,7 @@ describe('State', function(){
   			state.processEvent({});
 
   			assert.ok(eventFired, 'event did not fire');
-  			done();
+  			done()
   		});
 
   		describe('cron entry conditions', function(){
@@ -179,6 +202,21 @@ describe('State', function(){
 	  			mockScheduler.requestedCronJob.callback();
 	  			assert.equal(state.active, false, 'cron callback did not cause state to deactivate');
 	  			done();
+	  		});
+
+	  		it('should activate exit cron jobs immediately when initialState is active', function(){
+	  			
+	  			var mockScheduler = createMockScheduler();
+
+	  			var stateConfig = {
+	  				name:'foo',
+	  				initialState:'active',
+	  				exitOn:{cron:'00 26 12 * * *'}
+	  			};
+
+	  			var state = new StateInferenceEngine.State(stateConfig, mockScheduler);
+	  			
+	  			assert.equal(mockScheduler.requestedCronJob.active, true, 'cron job was never activated');
 	  		});
 
 	  		it('should stop any cron exit tasks when state becomes deactivated', function(done){
