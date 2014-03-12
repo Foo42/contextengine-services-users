@@ -142,6 +142,54 @@ describe('State', function(){
 	  			done();
 	  		});
 	  	});
+
+		describe('multiple entry conditions', function(){
+			describe('anyOf', function(){
+	  			it('should enter on any event matching entry condition being met', function(done){
+	  				var config = {
+			  			enterOn:{
+			  				anyOf:[
+			  					{eventMatching:{text:'foo'}},
+			  					{eventMatching:{text:'sandwhich'}},
+			  					{eventMatching:{text:'bar'}}
+			  				]
+			  			}
+			  		};
+
+			  		var state = new StateInferenceEngine.State(config);
+
+			  		//Act
+			  		state.processEvent({text:'sandwhich'});
+			  		
+			  		//Assert
+			  		assert.equal(state.active, true, 'event did not activate');
+			  		done();
+	  			});
+
+	  			if('should enter on either event mactching or cron conditions being met', function(done){
+	  				var config = {
+			  			enterOn:{
+			  				anyOf:[
+			  					{eventMatching:{text:'foo'}},
+			  					{eventMatching:{text:'sandwhich'}},
+			  					{cron:'00 26 12 * * *'},
+			  					{eventMatching:{text:'bar'}}
+			  				]
+			  			}
+			  		};
+
+			  		var state = new StateInferenceEngine.State(config);
+
+			  		assert.ok(mockScheduler.requestedCronJob, 'no cron job was set');
+		  			assert.equal(mockScheduler.requestedCronJob.spec, '00 26 12 * * *', 'did not set cron spec');
+		  			assert.equal(mockScheduler.requestedCronJob.active, true, 'cron job was never activated')
+
+		  			mockScheduler.requestedCronJob.callback();
+		  			assert.equal(state.active, true, 'cron callback did not cause state to activate');
+		  			done();
+	  			});
+	  		});
+		});
   	});
 
   	describe('State exit', function(){  

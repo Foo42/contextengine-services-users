@@ -4,6 +4,7 @@ var EventEmitter = require('events').EventEmitter;
 var _ = require('lodash');
 var userConfigurationAccess = require('./userConfigurationAccess');
 var async = require('async');
+var cron = require('cron');
 
 module.exports = (function(){
 	var module = {};
@@ -15,7 +16,11 @@ module.exports = (function(){
 			[
 				userConfig.getStateConfig,
 				function(stateConfigs, done){
-					var taskScheduler = {setTimeout:setTimeout, clearTimeout:clearTimeout};
+					var taskScheduler = {
+						setTimeout:setTimeout,
+						clearTimeout:clearTimeout,
+						createCronJob:function(spec, cb){return new cron.CronJob(spec, cb);}
+					};
 					var states = stateConfigs.states.map(function(stateConfig){return new module.State(stateConfig, taskScheduler)});			
 
 					var listener = new module.StateInferenceEngine(states);
@@ -69,6 +74,10 @@ module.exports = (function(){
 			return getAllConditionsOfType(config.exitOn, type);
 		}
 
+		var getAllEntryConditionsOfType = function(config, type){
+			return getAllConditionsOfType(config.enterOn, type);
+		}
+
 		var getAllConditionsOfType = function(config, type){
 			if(!config){
 				return [];
@@ -89,9 +98,8 @@ module.exports = (function(){
 		}
 
 		var matchesEntryConditions = function(event){
-			if(!config.enterOn || !config.enterOn.eventMatching){return;}
-
-			return objectMatches(event, config.enterOn.eventMatching);			
+			var entryMatchers = getAllEntryConditionsOfType(config, 'eventMatching');
+			return _.any(entryMatchers, function(matcher){return objectMatches(event, matcher)});			
 		}
 
 		var matchesExitConditions = function(event){
