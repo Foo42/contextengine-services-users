@@ -12,11 +12,15 @@ module.exports = function(){
 			};
 
 			text.post = function(req, res){
-				var contextEngine = req.user.contextEngine;
-				var event = {type:'text', text:req.body.eventText};
+				req.user.getContextEngine(function(err, contextEngine){
+					if(err){
+						return res.send(500);
+					}
+					var event = {type:'text', text:req.body.eventText};
 
-				contextEngine.registerNewEvent(event, function(){
-					res.redirect('/events/recent');	
+					contextEngine.registerNewEvent(event, function(){
+						res.redirect('/events/recent');	
+					});	
 				});
 			}
 
@@ -28,8 +32,14 @@ module.exports = function(){
 	})();
 
 	eventsModule.listRecent = function(req,res){
-		req.user.contextEngine.getRecentEvents(function(err, recentEvents){
-			res.render('events-list', {title:'Recent Events', events:recentEvents});
+		req.user.getContextEngine(function(err,contextEngine){
+			if(err){
+				return res.send(500);
+			}
+			
+			contextEngine.getRecentEvents(function(err, recentEvents){
+				res.render('events-list', {title:'Recent Events', events:recentEvents});
+			});
 		});
 	}
 

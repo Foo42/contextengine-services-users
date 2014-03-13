@@ -14,7 +14,8 @@ var initialise = function(getContextEngineForUser){
 					console.log('error getting context engine for user');
 					return;
 				}
-				req.user.contextEngine = engine;
+
+				req.user.getContextEngine = getContextEngineForUser.bind(getContextEngineForUser,req.user);
 				next();
 			});
 

@@ -37,12 +37,8 @@ var initialise = function(getContextEngineForUser){
 			  		return err;
 			  	}
 
-				getContextEngineForUser(req.user, function(err, engine){
-					if(!err){
-						req.user.contextEngine = engine;
-						return next();		
-					}
-				});  	
+			  	req.user.getContextEngine = getContextEngineForUser.bind(getContextEngineForUser,req.user);
+			  	return next();
 		  	});			
 		} else {
 			console.log('isAuthenticated failed');
