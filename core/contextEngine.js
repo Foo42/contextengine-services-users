@@ -4,8 +4,10 @@ var fileAppendingEventListener = require('./fileAppendingEventListener');
 var path = require('path');
 var mkdirp = require('mkdirp');
 var async = require('async');
+var registeredUsersAccess = require('../registeredUsers');
 
 var getValidDataPathForUser = function getValidDataPathForUser(user, done){
+	console.log('user.id ' + user.id);
 	var userDataPath = path.join(path.dirname(require.main.filename),'data','userSpecific', user.id);
 	mkdirp(userDataPath,function(err){
 		done(err, userDataPath);
@@ -52,25 +54,55 @@ module.exports = (function(){
 
 	module.createContextEnginesForRegisteredUsers = function(){
 		var engines = {};
-		return {
-			getContextEngineForUser:function(user, done){
-				//Create engines on demand for now. No persistance etc.
-				if(!engines[user]){
-					module.createContextEngine(user, function(err, engine){
-						if(err){
-							console.log('error creating context engine for user');
-							done(err);
-						}else{
-							console.log('created engine for user');
-							engines[user] = engine;
-							done(null,engines[user]);	
+		var waitingForEngines = [];
+		var enginesCreated = false;
+		var errorCreatingEngines = false;
+		
+		async.waterfall(
+			[
+				registeredUsersAccess.getAllRegisteredUsers,
+				function(users, done){
+					console.info('about to create engines for ' + users.length + ' users');
+					
+					async.forEach(
+						users, 
+						function(user, done){
+							console.info('creating context engine for: ' + user);
+							module.createContextEngine(user, function(err, engine){
+								if(!err && engine){
+									console.info('created context engine for user ' + user);
+									engines[user] = engine;
+								} else {
+									consoel.info('error '+ err +' creating context engine for user ' + user);
+									errorCreatingEngines = err;
+								}
+								done(err,engine);
+							});
+						},
+						function(err){
+							console.info('done creating engines. err = ' + err + ' number of waiters = ' + waitingForEngines.length);
+							enginesCreated = true;
+							waitingForEngines.forEach(function(awaiter){awaiter()});
+							waitingForEngines = [];
 						}
-						
-					});
-				}else{
-					done(null, engines[user]);
+					);
 				}
+			]
+		);
+		
+
+		var getContextEngineForUser = function getContextEngineForUser(user, done){
+			if(enginesCreated){
+				return done(errorCreatingEngines, engines[user]);
 			}
+
+			waitingForEngines.push(function(){
+				done(errorCreatingEngines, engines[user]);
+			});
+		};
+
+		return {
+			getContextEngineForUser:getContextEngineForUser
 		}
 	}
 
