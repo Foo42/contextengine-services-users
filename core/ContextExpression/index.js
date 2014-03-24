@@ -47,6 +47,9 @@ module.exports = function(eventBus, stateQueryService){
 			startWatch:function(){
 				eventBus.on('event', handleEvent);
 			},
+			stopWatch:function(){
+				eventBus.removeListener('event', handleEvent);
+			},
 			onTriggered:function(f){expression.on('triggered',f)}
 		}
 	};

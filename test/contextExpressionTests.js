@@ -18,7 +18,7 @@ describe('Context expressions', function(){
 	});
 
 	describe('simple event expressions', function(){
-		it('should raise event when event described in expression fires', function(done){
+		it('should raise event when eventMatching condition described in expression fires', function(done){
 			var specification = {
 				on:{
 					eventMatching:{
@@ -35,6 +35,46 @@ describe('Context expressions', function(){
 			});
 
 			eventBus.emit('event', {text:'foo'});
+		});
+
+		it('should not raise events when stopWatch has been called', function(done){
+			var shouldBeRaisingEvents = false;
+
+			var specification = {
+				on:{
+					eventMatching:{
+						text:'foo'
+					}
+				}
+			};
+
+			var expression = ContextExpression.createExpression(specification);
+
+			expression.onTriggered(function(){
+				if(!shouldBeRaisingEvents){
+					assert.fail();
+				}
+			});
+
+			eventBus.emit('event', {text:'foo'});
+
+			expression.startWatch();			
+			shouldBeRaisingEvents = true;
+
+			eventBus.emit('event', {text:'foo'});
+
+			expression.stopWatch();
+			shouldBeRaisingEvents = false;
+
+			eventBus.emit('event', {text:'foo'});
+
+
+			done();			
+
+		});
+
+		describe('cron events', function(){
+
 		});
 	});
 
