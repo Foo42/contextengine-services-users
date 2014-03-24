@@ -50,14 +50,15 @@ module.exports = (function(){
 			],
 			done
 		);
-	}
+	};
+
+
 
 	module.createContextEnginesForRegisteredUsers = function(){
 		var engines = {};
-		var waitingForEngines = [];
-		var enginesCreated = false;
-		var errorCreatingEngines = false;
-		
+		var contextEngineCreationProgress = new EventEmitter();
+		contextEngineCreationProgress.done = false;
+
 		async.waterfall(
 			[
 				registeredUsersAccess.getAllRegisteredUsers,
@@ -67,37 +68,50 @@ module.exports = (function(){
 					async.forEach(
 						users, 
 						function(user, done){
-							console.info('creating context engine for: ' + user);
+							console.info('creating context engine for: ' + user.id);
 							module.createContextEngine(user, function(err, engine){
-								if(!err && engine){
-									console.info('created context engine for user ' + user);
-									engines[user] = engine;
-								} else {
-									consoel.info('error '+ err +' creating context engine for user ' + user);
-									errorCreatingEngines = err;
+								if(err){
+									return done(err);
 								}
+								
+								console.info('created context engine for user ' + user.id);
+								engines[user.id] = engine;
+								
 								done(err,engine);
 							});
-						},
-						function(err){
-							console.info('done creating engines. err = ' + err + ' number of waiters = ' + waitingForEngines.length);
-							enginesCreated = true;
-							waitingForEngines.forEach(function(awaiter){awaiter()});
-							waitingForEngines = [];
 						}
 					);
 				}
-			]
+			],
+			function(err){
+				if(err){
+					console.log('error creating context engines: ' + err);
+					contextEngineCreationProgress.emit('errorCreatingEngines', err);
+					return process.exit();
+				}
+				
+				console.info('done creating engines. err = ' + err + ' number of waiters = ' + waitingForEngines.length);
+
+				contextEngineCreationProgress.done = true;
+				contextEngineCreationProgress.emit('createdAllEngines');
+				contextEngineCreationProgress = {done:true};
+
+				waitingForEngines.forEach(function(awaiter){awaiter()});
+				waitingForEngines = [];
+			}
 		);
 		
 
 		var getContextEngineForUser = function getContextEngineForUser(user, done){
-			if(enginesCreated){
-				return done(errorCreatingEngines, engines[user]);
+			console.log('getting context engine for user ' + user.id + ' ' + contextEngineCreationProgress.done);
+			if(contextEngineCreationProgress.done){
+				console.log('got context engine for user ' + user.id);
+				return done(null, engines[user.id]);
 			}
 
-			waitingForEngines.push(function(){
-				done(errorCreatingEngines, engines[user]);
+			contextEngineCreationProgress.on('createdAllEngines',function(){
+				console.log('subscribing for createdAllEngines event to access engine for user '+ user.id);
+				done(errorCreatingEngines, engines[user.id]);
 			});
 		};
 
