@@ -3,34 +3,30 @@ var objectMatches = require('../objectMatches');
 
 module.exports = function(eventBus, stateQueryService){
 	var createStateExpression = function createStateExpression(specification){
-		var expression = new EventEmitter();
-		
-		var stateCheck = function(done){
-			if(specification.isActive){
-				return stateQueryService.isStateActive(specification.isActive, done);
-			}
+		var stateName = specification.isActive || specification.isNotActive;
+
+		var isDesiredState = function(stateActiveState){
 			if(specification.isNotActive){
-				return !stateQueryService.isStateActive(specification.isNotActive, function(err, result){
-					done(err, !result);
-				});	
+				return !stateActiveState;
 			}
+			return stateActiveState;
 		}
 
+		var query = stateQueryService.createQuery(stateName);
 		return {
-			startWatch:function(){
-				setImmediate(function(){
-					console.log('about to perform state check');
-					stateCheck(function(err, result){
-						console.log('statecheck returned ' + arguments);
-						if(!err){
-							expression.emit('triggered', result);
-						}
-					});
+			startWatch: function(){query.startWatch()},
+			onTriggered: function(callback){
+				console.log('subscribing to onTriggered');
+				query.on('valueChanged',function(newValue){
+					callback(isDesiredState(newValue));
+				})
+			},
+			evaluate:function(callback){
+				query.currentValue(function(err, currentValue){
+					callback(err, isDesiredState(currentValue));
 				});
-			},			
-			onTriggered:function(f){expression.on('triggered',f)},
-			evaluate:stateCheck
-		}
+			}
+		};
 	};
 
 	var createEventWatch = function createEventWatch(specification){

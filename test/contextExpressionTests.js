@@ -2,18 +2,59 @@ var assert = require("assert");
 var EventEmitter = require('events').EventEmitter;
 
 var eventBus = new EventEmitter();
-var states = {};
-var stateQueryService = {isStateActive:function(stateName, callback){
-	return callback(null,states[stateName]);
-}};
+
+
+
+var stateQueryService = (function(){
+	var states = {};
+	var stateWatches = new EventEmitter();
+
+	return {
+		isStateActive: function(stateName, callback){
+			return callback(null,states[stateName]);
+		},		
+		setState: function(name, isActive){
+			states[name] = isActive;
+			stateWatches.emit(name, isActive);
+		},
+		cleanUp: function(){
+			stateWatches._events = {};
+		},
+		createQuery: function(stateName){
+			var query = new EventEmitter();
+			query.currentValue = function(callback){
+				console.log('in query service query currentValue, state = ' + states[stateName]);
+				return callback(null,states[stateName]);
+			};
+			query.startWatch = function(){				
+				stateWatches.on(stateName, function(newValue){
+					console.log('about to emit valueChanged to subs ' + Object.keys(query._events));					
+					query.emit('valueChanged',newValue);
+				});
+				query.emit('watching');
+			}
+			return query;
+		}
+	};
+})();
+
+var setState = stateQueryService.setState;
+delete stateQueryService.setState;
+
 
 var ContextExpression = require('../core/ContextExpression')(eventBus, stateQueryService);
+
+//TODO: 
+	// * State expression stopWatch
+	// * State expression polling / state subs
+
 
 describe('Context expressions', function(){
 	beforeEach(function(done){
 		console.log('in before each');
 		eventBus._events = {};
 		states = {};
+		stateQueryService.cleanUp();
 		done();
 	});
 
@@ -79,14 +120,14 @@ describe('Context expressions', function(){
 	});
 
 	describe('simple state expressions', function(){
-		it('should raise true event when state defined in isActive clause is active', function(done){
+		it('should raise true event when state defined in isActive clause becomes active', function(done){
 			var specification = {
 				whilst:{
 					isActive:'Monday'
 				}
 			};
 
-			states.Monday = true;
+			setState('Monday', false);
 
 			var expression = ContextExpression.createExpression(specification);
 			expression.startWatch();
@@ -94,17 +135,19 @@ describe('Context expressions', function(){
 			expression.onTriggered(function(isActive){
 				assert.equal(isActive, true);
 				done();
-			});			
+			});
+
+			setState('Monday', true);
 		});
 
-		it('should raise true event when state defined in isNotActive clause is not active', function(done){
+		it('should raise true event when state defined in isNotActive clause becomes not active', function(done){
 			var specification = {
 				whilst:{
 					isNotActive:'Monday'
 				}
 			};
 
-			states.Monday = false;
+			setState('Monday', true);
 
 			var expression = ContextExpression.createExpression(specification);
 			expression.startWatch();
@@ -113,6 +156,37 @@ describe('Context expressions', function(){
 				assert.equal(isActive, true);
 				done();
 			});			
+
+			setState('Monday', false);
+		});
+
+		it('should raise events if expression becomes true', function(done){
+			var specification = {
+				whilst:{
+					isActive:'Monday'
+				}
+			};
+
+			setState('Monday', false);
+
+			var expression = ContextExpression.createExpression(specification);			
+			expression.startWatch();
+
+			setTimeout(function(){
+				setState('Monday', true);
+			},300);
+			
+
+			expression.onTriggered(function(isActive){
+				//We dont mind if this triggers with false first, only that it becomes true
+				if(isActive){
+					done();
+				}
+			});	
+		});
+
+		it('should not raise events when watch stopped', function(){
+			
 		});
 	});
 
@@ -129,7 +203,7 @@ describe('Context expressions', function(){
 				}
 			};
 
-			states.Monday = true;
+			setState('Monday', true);
 			var expression = ContextExpression.createExpression(specification);
 			expression.startWatch();
 
@@ -155,7 +229,8 @@ describe('Context expressions', function(){
 				}
 			};
 
-			states.Monday = true;
+			setState('Monday', true);
+
 			var expression = ContextExpression.createExpression(specification);
 			expression.startWatch();
 
