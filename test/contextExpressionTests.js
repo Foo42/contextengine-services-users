@@ -70,7 +70,7 @@ describe('Context expressions', function(){
 
 			setState('Monday', false);
 
-			var expression = ContextExpression.createExpression(specification);
+			var expression = ContextExpression.createStateExpression(specification);
 			expression.startWatch();
 
 			expression.on('valueChanged', function(isActive){
@@ -90,7 +90,7 @@ describe('Context expressions', function(){
 
 			setState('Monday', true);
 
-			var expression = ContextExpression.createExpression(specification);
+			var expression = ContextExpression.createStateExpression(specification);
 			expression.startWatch();
 
 			expression.on('valueChanged', function(isActive){
@@ -110,7 +110,7 @@ describe('Context expressions', function(){
 
 			setState('Monday', false);
 
-			var expression = ContextExpression.createExpression(specification);			
+			var expression = ContextExpression.createStateExpression(specification);			
 			expression.startWatch();
 
 			setTimeout(function(){
@@ -142,7 +142,7 @@ describe('Context expressions', function(){
 					}
 				};
 
-				var expression = ContextExpression.createExpression(specification);
+				var expression = ContextExpression.createEventExpression(specification);
 				expression.startWatch();
 
 				expression.onTriggered(function(){
@@ -163,7 +163,7 @@ describe('Context expressions', function(){
 					}
 				};
 
-				var expression = ContextExpression.createExpression(specification);
+				var expression = ContextExpression.createEventExpression(specification);
 
 				expression.onTriggered(function(){
 					if(!shouldBeRaisingEvents){
@@ -207,7 +207,7 @@ describe('Context expressions', function(){
 				};
 
 				setState('Monday', true);
-				var expression = ContextExpression.createExpression(specification);
+				var expression = ContextExpression.createEventExpression(specification);
 				expression.startWatch();
 
 				expression.onTriggered(function(){
@@ -234,7 +234,7 @@ describe('Context expressions', function(){
 
 				setState('Monday', true);
 
-				var expression = ContextExpression.createExpression(specification);
+				var expression = ContextExpression.createEventExpression(specification);
 				expression.startWatch();
 
 				expression.onTriggered(function(){

@@ -13,14 +13,9 @@ module.exports = function(eventBus, stateQueryService){
 		}
 
 		var query = stateQueryService.createQuery(stateName);
+
 		return {
-			startWatch: function(){query.startWatch()},
-			onTriggered: function(callback){
-				console.log('subscribing to onTriggered');
-				query.on('valueChanged',function(newValue){
-					callback(isDesiredState(newValue));
-				})
-			},
+			startWatch: function(){query.startWatch()},			
 			on:function(event, callback){
 				console.log('stateExpression: adding subscriber to event: ' + event);
 				query.on(event, function(newValue){
@@ -80,28 +75,17 @@ module.exports = function(eventBus, stateQueryService){
 	}
 
 	return {
-		createExpression : function createExpression(specification){
-			var eventWatcher;
-			var stateCondition;
+		createEventExpression: function createEventExpression(specification){
+			var eventSpec = specification.on || specification;
+			eventWatcher = createEventWatch(eventSpec);
 
-			if(specification.on){
-				eventWatcher = createEventWatch(specification.on);
-			}
-
-			if(specification.whilst){
-				stateCondition = createStateExpression(specification.whilst);
-			}
-
-			if(eventWatcher && !stateCondition){
-				console.log('created event expression');
+			if(!specification.whilst){
 				return eventWatcher;
 			}
-			if(stateCondition && !eventWatcher){
-				console.log('created state expression');
-				return stateCondition;
-			}
-			console.log('created state conditional event expression');
+
+			var stateCondition = createStateExpression(specification.whilst);
 			return createStateConditionalEventWatcher(eventWatcher, stateCondition);
-		}
+		},
+		createStateExpression:function(specification){return createStateExpression(specification.whilst);}		
 	}
 }
