@@ -58,66 +58,7 @@ describe('Context expressions', function(){
 		done();
 	});
 
-	describe('simple event expressions', function(){
-		it('should raise event when eventMatching condition described in expression fires', function(done){
-			var specification = {
-				on:{
-					eventMatching:{
-						text:'foo'
-					}
-				}
-			};
-
-			var expression = ContextExpression.createExpression(specification);
-			expression.startWatch();
-
-			expression.onTriggered(function(){
-				done();
-			});
-
-			eventBus.emit('event', {text:'foo'});
-		});
-
-		it('should not raise events when stopWatch has been called', function(done){
-			var shouldBeRaisingEvents = false;
-
-			var specification = {
-				on:{
-					eventMatching:{
-						text:'foo'
-					}
-				}
-			};
-
-			var expression = ContextExpression.createExpression(specification);
-
-			expression.onTriggered(function(){
-				if(!shouldBeRaisingEvents){
-					assert.fail();
-				}
-			});
-
-			eventBus.emit('event', {text:'foo'});
-
-			expression.startWatch();			
-			shouldBeRaisingEvents = true;
-
-			eventBus.emit('event', {text:'foo'});
-
-			expression.stopWatch();
-			shouldBeRaisingEvents = false;
-
-			eventBus.emit('event', {text:'foo'});
-
-
-			done();			
-
-		});
-
-		describe('cron events', function(){
-
-		});
-	});
+	
 
 	describe('simple state expressions', function(){
 		it('should raise true event when state defined in isActive clause becomes active', function(done){
@@ -132,7 +73,7 @@ describe('Context expressions', function(){
 			var expression = ContextExpression.createExpression(specification);
 			expression.startWatch();
 
-			expression.onTriggered(function(isActive){
+			expression.on('valueChanged', function(isActive){
 				assert.equal(isActive, true);
 				done();
 			});
@@ -152,7 +93,7 @@ describe('Context expressions', function(){
 			var expression = ContextExpression.createExpression(specification);
 			expression.startWatch();
 
-			expression.onTriggered(function(isActive){
+			expression.on('valueChanged', function(isActive){
 				assert.equal(isActive, true);
 				done();
 			});			
@@ -177,7 +118,7 @@ describe('Context expressions', function(){
 			},300);
 			
 
-			expression.onTriggered(function(isActive){
+			expression.on('valueChanged', function(isActive){
 				//We dont mind if this triggers with false first, only that it becomes true
 				if(isActive){
 					done();
@@ -190,55 +131,119 @@ describe('Context expressions', function(){
 		});
 	});
 
-	describe('qualified event expressions', function(){
-		it('should raise event when event described in expression fires and state clause is met', function(done){
-			var specification = {
-				on:{
-					eventMatching:{
-						text:'foo'
+	describe('event expressions', function(){
+		describe('simple event expressions', function(){
+			it('should raise event when eventMatching condition described in expression fires', function(done){
+				var specification = {
+					on:{
+						eventMatching:{
+							text:'foo'
+						}
 					}
-				},
-				whilst:{
-					isActive:'Monday'
-				}
-			};
+				};
 
-			setState('Monday', true);
-			var expression = ContextExpression.createExpression(specification);
-			expression.startWatch();
+				var expression = ContextExpression.createExpression(specification);
+				expression.startWatch();
 
-			expression.onTriggered(function(){
-				done();
+				expression.onTriggered(function(){
+					done();
+				});
+
+				eventBus.emit('event', {text:'foo'});
 			});
 
-			eventBus.emit('event', {text:'foo'});
-		});
+			it('should not raise events when stopWatch has been called', function(done){
+				var shouldBeRaisingEvents = false;
 
-		it('should not raise event when event described in expression fires and state clause is not met', function(done){
-			this.timeout(500);
-			setTimeout(done,300); //if fail callback not called, the test passes
-
-			var specification = {
-				on:{
-					eventMatching:{
-						text:'foo'
+				var specification = {
+					on:{
+						eventMatching:{
+							text:'foo'
+						}
 					}
-				},
-				whilst:{
-					isNotActive:'Monday'
-				}
-			};
+				};
 
-			setState('Monday', true);
+				var expression = ContextExpression.createExpression(specification);
 
-			var expression = ContextExpression.createExpression(specification);
-			expression.startWatch();
+				expression.onTriggered(function(){
+					if(!shouldBeRaisingEvents){
+						assert.fail();
+					}
+				});
 
-			expression.onTriggered(function(){
-				assert.fail();
+				eventBus.emit('event', {text:'foo'});
+
+				expression.startWatch();			
+				shouldBeRaisingEvents = true;
+
+				eventBus.emit('event', {text:'foo'});
+
+				expression.stopWatch();
+				shouldBeRaisingEvents = false;
+
+				eventBus.emit('event', {text:'foo'});
+
+
+				done();			
+
 			});
 
-			eventBus.emit('event', {text:'foo'});
+			describe('cron events', function(){
+
+			});
 		});
+
+		describe('qualified event expressions', function(){
+			it('should raise event when event described in expression fires and state clause is met', function(done){
+				var specification = {
+					on:{
+						eventMatching:{
+							text:'foo'
+						}
+					},
+					whilst:{
+						isActive:'Monday'
+					}
+				};
+
+				setState('Monday', true);
+				var expression = ContextExpression.createExpression(specification);
+				expression.startWatch();
+
+				expression.onTriggered(function(){
+					done();
+				});
+
+				eventBus.emit('event', {text:'foo'});
+			});
+
+			it('should not raise event when event described in expression fires and state clause is not met', function(done){
+				this.timeout(500);
+				setTimeout(done,300); //if fail callback not called, the test passes
+
+				var specification = {
+					on:{
+						eventMatching:{
+							text:'foo'
+						}
+					},
+					whilst:{
+						isNotActive:'Monday'
+					}
+				};
+
+				setState('Monday', true);
+
+				var expression = ContextExpression.createExpression(specification);
+				expression.startWatch();
+
+				expression.onTriggered(function(){
+					assert.fail();
+				});
+
+				eventBus.emit('event', {text:'foo'});
+			});
+		});	
 	});
+	
 });

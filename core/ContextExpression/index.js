@@ -21,6 +21,12 @@ module.exports = function(eventBus, stateQueryService){
 					callback(isDesiredState(newValue));
 				})
 			},
+			on:function(event, callback){
+				console.log('stateExpression: adding subscriber to event: ' + event);
+				query.on(event, function(newValue){
+					callback(isDesiredState(newValue));
+				});
+			},
 			evaluate:function(callback){
 				query.currentValue(function(err, currentValue){
 					callback(err, isDesiredState(currentValue));
@@ -87,11 +93,14 @@ module.exports = function(eventBus, stateQueryService){
 			}
 
 			if(eventWatcher && !stateCondition){
+				console.log('created event expression');
 				return eventWatcher;
 			}
 			if(stateCondition && !eventWatcher){
+				console.log('created state expression');
 				return stateCondition;
 			}
+			console.log('created state conditional event expression');
 			return createStateConditionalEventWatcher(eventWatcher, stateCondition);
 		}
 	}
