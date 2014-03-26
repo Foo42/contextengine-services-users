@@ -28,6 +28,22 @@ describe('StateInferenceEngine', function(){
   				done();
   			});
   		});
+
+  		describe('isStateActive', function(){
+  			it('should return whether state is active', function(done){
+  				var states = [new StateInferenceEngine.State({name:'foo'}), new StateInferenceEngine.State({name:'bar'})];
+  				states[0].activate();
+  				var engine = new StateInferenceEngine.StateInferenceEngine(states);
+  				engine.isStateActive('foo', function(err, result){
+  					assert.equal(result, true);
+
+  					engine.isStateActive('bar', function(err, result){
+	  					assert.equal(result, false);
+	  					done();
+	  				});
+  				});
+  			});
+  		});
   	});
 
   	describe('Active states changes', function(){

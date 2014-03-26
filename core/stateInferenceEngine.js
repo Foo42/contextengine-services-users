@@ -54,11 +54,17 @@ module.exports = (function(){
 		
 		self.processEvent = function(event){
 			states.forEach(function(state){state.processEvent(event)});
-		}
+		};
 
 		self.getActiveStates = function(){
 			return states.filter(function(state){return state.active}).map(function(state){return state.name});
-		}
+		};
+
+		self.isStateActive = function isStateActive(stateName, callback){			
+			var state = _.find(states, function(state){return state.name === stateName});
+			var isActive = state && state.active;
+			return callback(null, isActive);
+		};
 	};
 
 	module.State = function(config, taskScheduler){
