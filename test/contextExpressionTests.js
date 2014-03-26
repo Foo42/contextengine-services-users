@@ -145,7 +145,7 @@ describe('Context expressions', function(){
 				var expression = ContextExpression.createEventExpression(specification);
 				expression.startWatch();
 
-				expression.onTriggered(function(){
+				expression.on('triggered', function(){
 					done();
 				});
 
@@ -165,7 +165,7 @@ describe('Context expressions', function(){
 
 				var expression = ContextExpression.createEventExpression(specification);
 
-				expression.onTriggered(function(){
+				expression.on('triggered', function(){
 					if(!shouldBeRaisingEvents){
 						assert.fail();
 					}
@@ -210,7 +210,7 @@ describe('Context expressions', function(){
 				var expression = ContextExpression.createEventExpression(specification);
 				expression.startWatch();
 
-				expression.onTriggered(function(){
+				expression.on('triggered',function(){
 					done();
 				});
 
@@ -237,7 +237,7 @@ describe('Context expressions', function(){
 				var expression = ContextExpression.createEventExpression(specification);
 				expression.startWatch();
 
-				expression.onTriggered(function(){
+				expression.on('trigger', function(){
 					assert.fail();
 				});
 

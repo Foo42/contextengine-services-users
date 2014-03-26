@@ -47,14 +47,14 @@ module.exports = function(eventBus, stateQueryService){
 			stopWatch:function(){
 				eventBus.removeListener('event', handleEvent);
 			},
-			onTriggered:function(f){expression.on('triggered',f)}
+			on:expression.on.bind(expression)
 		}
 	};
 
 	var createStateConditionalEventWatcher = function createStateConditionalEventWatcher(eventWatcher, stateCondition){
 		var eventPropegator = new EventEmitter();
 
-		eventWatcher.onTriggered(function(e){
+		eventWatcher.on('triggered',function(e){
 			stateCondition.evaluate(function(err, result){
 				if(result){
 					console.log('event passed state condition');
@@ -68,9 +68,7 @@ module.exports = function(eventBus, stateQueryService){
 			startWatch:function(){
 				eventWatcher.startWatch();
 			},
-			onTriggered:function(f){
-				eventPropegator.on('triggered',f);		
-			}
+			on:eventPropegator.on.bind(eventPropegator),			
 		}
 	}
 
