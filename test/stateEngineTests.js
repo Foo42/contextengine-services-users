@@ -2,7 +2,40 @@ var assert = require("assert")
 var StateInferenceEngine = require('../core/stateInferenceEngine');
 
 describe('StateInferenceEngine', function(){
- 
+ 	describe('Adding states', function(){
+ 		it('should add states to internal collection', function(done){
+ 			var stateToAdd = new StateInferenceEngine.State({name:'test', active:true});
+ 			var engine = new StateInferenceEngine.StateInferenceEngine();
+ 			engine.add(stateToAdd);
+ 			engine.forEachState(function(state){
+ 				if(state === stateToAdd){
+ 					done();
+ 				}
+ 			});
+ 		});
+ 	});
+
+ 	describe('Enumerating states', function(){
+ 		describe('forEachState',function(){
+ 			it('should call the given function for each state, then call final func', function(done){
+ 				var states = [
+ 					new StateInferenceEngine.State({name:'foo'}),
+ 					new StateInferenceEngine.State({name:'foo'})
+ 				];
+
+ 				var engine = new StateInferenceEngine.StateInferenceEngine(states);
+
+ 				var statesSeen = [];
+
+ 				engine.forEachState(function(state){statesSeen.push(state)}, function(err){
+ 					assert.equal(statesSeen[0], states[0]);
+ 					assert.equal(statesSeen[1], states[1]);
+ 					done();
+ 				});
+ 			});
+ 		});
+ 	});
+
   	describe('When event recieved', function(){  
   		it('should pass event to every state', function(done){
   			var eventCalledWith;

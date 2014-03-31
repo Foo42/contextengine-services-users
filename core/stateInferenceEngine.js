@@ -6,6 +6,7 @@ var userConfigurationAccess = require('./userConfigurationAccess');
 var async = require('async');
 var cron = require('cron');
 
+
 module.exports = (function(){
 	var module = {};
 
@@ -24,6 +25,7 @@ module.exports = (function(){
 					var states = stateConfigs.states.map(function(stateConfig){return new module.State(stateConfig, taskScheduler)});			
 
 					var listener = new module.StateInferenceEngine(states);
+
 					contextEngine.on('event created', listener.processEvent);
 
 					listener.on('stateChange.activated', function(event){contextEngine.registerNewEvent(event,function(){})});
@@ -37,10 +39,14 @@ module.exports = (function(){
 		);
 	}
 
-	module.StateInferenceEngine = function(states){		
+	module.StateInferenceEngine = function(statesToAdd){		
 		var self = this;
+		var states = [];
+		statesToAdd = statesToAdd || [];		
 
-		states.forEach(function(state){
+		self.add = function(state){
+			states.push(state);
+
 			state.on('activated', function(){
 				var stateActivedEvent = {type:'stateChange.activated', stateName:state.name};
 				self.emit('stateChange.activated', stateActivedEvent);
@@ -50,7 +56,7 @@ module.exports = (function(){
 				var stateActivedEvent = {type:'stateChange.deactivated', stateName:state.name};
 				self.emit('stateChange.deactivated', stateActivedEvent);
 			});
-		});
+		};
 		
 		self.processEvent = function(event){
 			states.forEach(function(state){state.processEvent(event)});
@@ -60,11 +66,22 @@ module.exports = (function(){
 			return states.filter(function(state){return state.active}).map(function(state){return state.name});
 		};
 
+		self.forEachState = function forEachState(iterator, callback){
+			states.forEach(function(state){
+				iterator(state);
+			});
+			callback &&	callback(null);
+		};
+
 		self.isStateActive = function isStateActive(stateName, callback){			
 			var state = _.find(states, function(state){return state.name === stateName});
 			var isActive = state && state.active;
 			return callback(null, isActive);
 		};
+
+		statesToAdd.forEach(function(state){
+			self.add(state);
+		});
 	};
 
 	module.State = function(config, taskScheduler){
