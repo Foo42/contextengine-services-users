@@ -10,6 +10,33 @@ var cron = require('cron');
 module.exports = (function(){
 	var module = {};
 
+	module.createStateRuleFromConfig = function(config, expressionFactory, callback){
+		var state = new EventEmitter();
+
+		if(config.isActive){
+			var stateExpression = expressionFactory.createStateExpression(config.isActive);
+
+			stateExpression.on('valueChanged', function(newValue){
+				if(state.active == newValue){
+					return;
+				}
+
+				state.active = newValue;	
+				state.emit(newValue ? 'activated' : 'deactivated');			
+			});
+
+			stateExpression.evaluate(function(err, result){
+				if(err){
+					return callback(err);
+				}
+
+				state.active = result;
+
+				callback(null, state);
+			});
+		}
+	};
+
 	module.attachListener = function(contextEngine, done){
 		console.info('attatching state inference engine');
 		var userConfig = userConfigurationAccess.forUser(contextEngine.user);
@@ -22,10 +49,11 @@ module.exports = (function(){
 						clearTimeout:clearTimeout,
 						createCronJob:function(spec, cb){return new cron.CronJob(spec, cb);}
 					};
-					var states = stateConfigs.states.map(function(stateConfig){return new module.State(stateConfig, taskScheduler)});			
+					
+					var listener = new module.StateInferenceEngine();
 
-					var listener = new module.StateInferenceEngine(states);
-
+					var states = stateConfigs.states.map(function(stateConfig){return new module.State(stateConfig, taskScheduler)});
+					states.forEach(function(state){listener.add(state)});
 					contextEngine.on('event created', listener.processEvent);
 
 					listener.on('stateChange.activated', function(event){contextEngine.registerNewEvent(event,function(){})});
