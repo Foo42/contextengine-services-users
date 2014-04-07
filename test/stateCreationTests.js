@@ -1,5 +1,5 @@
 var assert = require("assert");
-var StateInferenceEngine = require('../core/stateInferenceEngine');
+var binaryState = require('../core/State').binaryState;
 var EventEmitter = require('events').EventEmitter;
 
 describe('State creation', function(){
@@ -22,7 +22,7 @@ describe('State creation', function(){
 				}
 			};
 
-			StateInferenceEngine.createStateRuleFromConfig(specification, mockExpressionFactory, function(err, state){
+			binaryState.createRule(specification, mockExpressionFactory, function(err, state){
 				if(err){
 					assert.fail();
 				}
@@ -81,7 +81,7 @@ describe('State creation', function(){
 				}
 			};
 
-			StateInferenceEngine.createStateRuleFromConfig(specification, mockExpressionFactory, function(err, state){
+			binaryState.createRule(specification, mockExpressionFactory, function(err, state){
 				if(err || !state){
 					assert.fail();
 				}
@@ -130,7 +130,7 @@ describe('State creation', function(){
 				}
 			};
 
-			StateInferenceEngine.createStateRuleFromConfig(specification, mockExpressionFactory, function(err, state){
+			binaryState.createRule(specification, mockExpressionFactory, function(err, state){
 				if(err){
 					assert.fail();
 				}
@@ -161,7 +161,7 @@ describe('State creation', function(){
 				}
 			};
 
-			StateInferenceEngine.createStateRuleFromConfig(specification, mockExpressionFactory, function(err, state){
+			binaryState.createRule(specification, mockExpressionFactory, function(err, state){
 				if(err){
 					assert.fail();
 				}
