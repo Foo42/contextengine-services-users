@@ -8,7 +8,7 @@
   <body>
     <h1><%= title %></h1>
     <% for(var i=0; i<events.length; i++) {%>
-       <li><%= events[i].text %></li>
+       <li>type: <%= events[i].type || 'unknown type' %> detail:<%= events[i].text || events[i].stateName%></li>
     <% } %>
   </body>
 </html>
