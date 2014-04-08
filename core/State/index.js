@@ -1,6 +1,7 @@
 var EventEmitter = require('events').EventEmitter;
 
 var createRule = function(config, expressionFactory, callback){
+	console.log('creating state rule with specification ' + JSON.stringify(config));
 	var state = new EventEmitter();
 	state.active = false;
 
@@ -35,12 +36,15 @@ var createRule = function(config, expressionFactory, callback){
 			result ? activate() : deactivate();
 		});
 	} else if(config.enter || config.exit){
-		
+		console.log('state has enter / exit conditions');
 		if(config.enter){
+			
 			var entryExpression = expressionFactory.createEventExpression(config.enter);
+			
 			state.on('activated', function(){
 				entryExpression.stopWatch();
 			});
+			
 			state.on('deactivated', function(){
 				entryExpression.startWatch();
 			});

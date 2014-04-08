@@ -29,6 +29,7 @@ module.exports = (function(){
 					var listener = new module.StateInferenceEngine();
 					var stateConfig = {states:[
 							{
+								name:'testing',
 								enter:{
 									on:{
 										eventMatching:{text:'testing'}
@@ -45,15 +46,14 @@ module.exports = (function(){
 					var stateQueryService = require('./stateQueryService')(listener);
 					var expressionFactory = require('./ContextExpression')(contextEngine, stateQueryService);
 					
-					async.map(stateConfigs,
+					async.map(stateConfig.states,
 						function(stateConfig, done){
 							binaryState.createRule(stateConfig, expressionFactory, done);
 						}, 
 						function(err, states){
 							console.log('finished mapping state config to states: err: ' + err);
 							states.forEach(function(state){listener.add(state)});
-							contextEngine.on('event created', listener.processEvent);
-
+							
 							listener.on('stateChange.activated', function(event){contextEngine.registerNewEvent(event,function(){})});
 							listener.on('stateChange.deactivated', function(event){contextEngine.registerNewEvent(event,function(){})});
 

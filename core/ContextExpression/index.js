@@ -31,6 +31,7 @@ module.exports = function(eventBus, stateQueryService){
 	};
 
 	var createEventWatch = function createEventWatch(specification){
+		console.log('creating event expression with spec ' + JSON.stringify(specification));
 		var expression = new EventEmitter();
 			
 		var handleEvent = function(e){
@@ -42,7 +43,7 @@ module.exports = function(eventBus, stateQueryService){
 
 		return {
 			startWatch:function(){
-				eventBus.on('event', handleEvent);
+				eventBus.on('event created', handleEvent); //prefer it if the event bus wasnt just the context engine with its odd event name
 			},
 			stopWatch:function(){
 				eventBus.removeListener('event', handleEvent);
