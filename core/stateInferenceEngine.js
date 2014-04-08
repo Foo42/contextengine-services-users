@@ -40,6 +40,12 @@ module.exports = (function(){
 										eventMatching:{text:'finished testing'}
 									}
 								}
+							},
+							{
+								name:'not testing',
+								isActive:{
+									whilst:{isNotActive:'testing'}
+								}
 							}
 						]};
 
