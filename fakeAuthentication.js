@@ -7,9 +7,9 @@ var initialise = function(getContextEngineForUser){
 		},
 
 		ensureAuthenticated: function(req, res, next){
-			req.user = req.user || {};
+			req.user = req.user || {id:'someone'};
 			
-			getContextEngineForUser({id:'someone'}, function(err, engine){
+			getContextEngineForUser(req.user, function(err, engine){
 				if(err){
 					console.log('error getting context engine for user');
 					return;

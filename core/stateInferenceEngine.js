@@ -5,6 +5,7 @@ var _ = require('lodash');
 var userConfigurationAccess = require('./userConfigurationAccess');
 var async = require('async');
 var cron = require('cron');
+var binaryState = require('./State').binaryState;
 
 
 module.exports = (function(){
@@ -26,16 +27,40 @@ module.exports = (function(){
 					};
 					
 					var listener = new module.StateInferenceEngine();
+					var stateConfig = {states:[
+							{
+								enter:{
+									on:{
+										eventMatching:{text:'testing'}
+									}
+								},
+								exit:{
+									on:{
+										eventMatching:{text:'finished testing'}
+									}
+								}
+							}
+						]};
 
-					var states = stateConfigs.states.map(function(stateConfig){return new module.State(stateConfig, taskScheduler)});
-					states.forEach(function(state){listener.add(state)});
-					contextEngine.on('event created', listener.processEvent);
+					var stateQueryService = require('./stateQueryService')(listener);
+					var expressionFactory = require('./ContextExpression')(contextEngine, stateQueryService);
+					
+					async.map(stateConfigs,
+						function(stateConfig, done){
+							binaryState.createRule(stateConfig, expressionFactory, done);
+						}, 
+						function(err, states){
+							console.log('finished mapping state config to states: err: ' + err);
+							states.forEach(function(state){listener.add(state)});
+							contextEngine.on('event created', listener.processEvent);
 
-					listener.on('stateChange.activated', function(event){contextEngine.registerNewEvent(event,function(){})});
-					listener.on('stateChange.deactivated', function(event){contextEngine.registerNewEvent(event,function(){})});
+							listener.on('stateChange.activated', function(event){contextEngine.registerNewEvent(event,function(){})});
+							listener.on('stateChange.deactivated', function(event){contextEngine.registerNewEvent(event,function(){})});
 
-					contextEngine.states = listener;
-					done(null)			
+							contextEngine.states = listener;
+							done(null)			
+						}
+					);
 				}
 			],
 			done

@@ -79,7 +79,8 @@ module.exports = (function(){
 								
 								done(err,engine);
 							});
-						}
+						},
+						done
 					);
 				}
 			],
@@ -90,19 +91,19 @@ module.exports = (function(){
 					return process.exit();
 				}
 				
-				console.info('done creating engines. err = ' + err + ' number of waiters = ' + waitingForEngines.length);
+				console.info('done creating engines. err = ' + err);
 
 				contextEngineCreationProgress.done = true;
 				contextEngineCreationProgress.emit('createdAllEngines');
 				contextEngineCreationProgress = {done:true};
-
-				waitingForEngines.forEach(function(awaiter){awaiter()});
-				waitingForEngines = [];
 			}
 		);
 		
 
 		var getContextEngineForUser = function getContextEngineForUser(user, done){
+			if(!user.id){
+				console.trace('undefined user');
+			}
 			console.log('getting context engine for user ' + user.id + ' ' + contextEngineCreationProgress.done);
 			if(contextEngineCreationProgress.done){
 				console.log('got context engine for user ' + user.id);
