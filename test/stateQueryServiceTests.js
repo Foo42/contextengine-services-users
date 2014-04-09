@@ -20,12 +20,16 @@ describe('StateQueryService,', function(){
 			});
 		});
 
-		it('should raise valueChanged events when watching a state which becomes active',function(done){
+		it('should raise valueChanged events when watching a state which becomes active or inactive',function(done){
 			var stateEngine = new EventEmitter();
 			stateEngine.isStateActive = function(){};
 			stateEngine.fakeStateActivating = function(stateName){
 				var stateActivedEvent = {type:'stateChange.activated', stateName:stateName};
 				stateEngine.emit('stateChange.activated', stateActivedEvent);
+			};
+			stateEngine.fakeStateDeactivating = function(stateName){
+				var stateDeactivedEvent = {type:'stateChange.deactivated', stateName:stateName};
+				stateEngine.emit('stateChange.deactivated', stateDeactivedEvent);
 			};
 
 			var stateQueryService = StateQueryService(stateEngine);
@@ -35,9 +39,18 @@ describe('StateQueryService,', function(){
 				stateEngine.fakeStateActivating('foo');
 			});
 
+			var timesValueChangedCalled = 0;
+			var expectedStateOnCall = true;
 			query.on('valueChanged',function(isActive){
-				assert.equal(isActive, true);
-				done();
+				
+				assert.equal(isActive, expectedStateOnCall);
+				if(++timesValueChangedCalled == 2){
+					return done();
+				}
+
+				expectedStateOnCall = false;
+				stateEngine.fakeStateDeactivating('foo');
+
 			});
 
 			query.startWatch();

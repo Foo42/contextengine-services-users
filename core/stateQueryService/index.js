@@ -7,6 +7,10 @@ module.exports = function(stateEngine){
 		stateWatches.emit(stateChangeEvent.stateName, true);
 	});
 
+	stateEngine.on('stateChange.deactivated',function(stateChangeEvent){
+		stateWatches.emit(stateChangeEvent.stateName, false);
+	});
+
 	return {		
 		createQuery: function(stateName){
 			var query = new EventEmitter();
