@@ -30,6 +30,8 @@ var createRule = function(config, expressionFactory, callback){
 			newValue ? activate() : deactivate();
 		});
 
+		stateExpression.startWatch();
+
 		stateExpression.evaluate(function(err, result){
 			if(err){
 				return callback(err);

@@ -150,7 +150,8 @@ describe('State creation', function(){
 					return callback(null, expressionValue);
 			};
 			fakeStateExpression.startWatch = function(){
-				fakeStateExpression.emit('watching');				
+				fakeStateExpression.isWatching = true;
+				fakeStateExpression.emit('watching');
 			};
 
 			var specification = {
@@ -174,6 +175,7 @@ describe('State creation', function(){
 					done();	
 				});
 
+				assert.ok(fakeStateExpression.isWatching);
 				expressionValue = false;
 				fakeStateExpression.emit('valueChanged', expressionValue);
 
