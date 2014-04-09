@@ -149,7 +149,7 @@ describe('Context expressions', function(){
 					done();
 				});
 
-				eventBus.emit('event', {text:'foo'});
+				eventBus.emit('event created', {text:'foo'});
 			});
 
 			it('should not raise events when stopWatch has been called', function(done){
@@ -214,7 +214,7 @@ describe('Context expressions', function(){
 					done();
 				});
 
-				eventBus.emit('event', {text:'foo'});
+				eventBus.emit('event created', {text:'foo'});
 			});
 
 			it('should not raise event when event described in expression fires and state clause is not met', function(done){
