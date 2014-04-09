@@ -5,6 +5,8 @@ var createRule = function(config, expressionFactory, callback){
 	var state = new EventEmitter();
 	state.active = false;
 
+	state.name = config.name || 'anon';
+
 	var activate = function activate(){
 		if(state.active){
 			return;
