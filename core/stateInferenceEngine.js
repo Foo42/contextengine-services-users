@@ -19,7 +19,7 @@ module.exports = (function(){
 		async.waterfall(
 			[
 				userConfig.getStateConfig,
-				function(stateConfigs, done){
+				function(stateConfig, done){
 					var taskScheduler = {
 						setTimeout:setTimeout,
 						clearTimeout:clearTimeout,
@@ -27,27 +27,7 @@ module.exports = (function(){
 					};
 					
 					var listener = new module.StateInferenceEngine();
-					var stateConfig = {states:[
-							{
-								name:'testing',
-								enter:{
-									on:{
-										eventMatching:{text:'testing'}
-									}
-								},
-								exit:{
-									on:{
-										eventMatching:{text:'finished testing'}
-									}
-								}
-							},
-							{
-								name:'not testing',
-								isActive:{
-									whilst:{isNotActive:'testing'}
-								}
-							}
-						]};
+					
 
 					var stateQueryService = require('./stateQueryService')(listener);
 					var expressionFactory = require('./ContextExpression')(contextEngine, stateQueryService);
