@@ -77,6 +77,11 @@ var createRule = function(config, expressionFactory, callback){
 	callback(null, state);
 };
 
-module.exports.binaryState = {
-	createRule: createRule
+var stateQueryService = require('./stateQueryService');
+
+module.exports = {
+	binaryState : {
+		createRule: createRule
+	},
+	stateQueryService: stateQueryService
 }

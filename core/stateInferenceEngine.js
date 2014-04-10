@@ -29,7 +29,7 @@ module.exports = (function(){
 					var listener = new module.StateInferenceEngine();
 					
 
-					var stateQueryService = require('./stateQueryService')(listener);
+					var stateQueryService = require('./State').stateQueryService(listener);
 					var expressionFactory = require('./ContextExpression')(contextEngine, stateQueryService);
 					
 					async.map(stateConfig.states,
