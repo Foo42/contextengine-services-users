@@ -206,7 +206,8 @@ describe('Context expressions', function(){
 								fakeCronJob = {
 									fire:cb,
 									started:false,
-									start:function(){fakeCronJob.started = true;}
+									start:function(){fakeCronJob.started = true;},
+									stop:function(){fakeCronJob.started = false;}
 								};
 								return fakeCronJob;
 							}
@@ -221,6 +222,8 @@ describe('Context expressions', function(){
 					assert.ok(fakeCronJob.started);
 					
 					expression.on('triggered', function(){
+						expression.stopWatch();
+						assert.equal(fakeCronJob.started, false);
 						done();
 					});
 

@@ -55,15 +55,14 @@ module.exports = function(eventBus, stateQueryService){
 
 		if(specification.cron){
 			var cronJob = new cron.CronJob(specification.cron, triggerEvent);
-			expression.on('starting watch', cronJob.start);
-			expression.on('stopping watch', cronJob.stop);
+			expression.on('starting watch', cronJob.start.bind(cronJob));
+			expression.on('stopping watch', cronJob.stop.bind(cronJob));
 		}
 
 		var handleEvent = function(e){
 			console.log('event detected');
 			expression.emit('processing event',e);			
 		};
-
 
 		return {
 			startWatch:function(){				
