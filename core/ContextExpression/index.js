@@ -1,5 +1,6 @@
 var EventEmitter = require('events').EventEmitter;
 var objectMatches = require('../objectMatches');
+var cron = require('cron');
 
 module.exports = function(eventBus, stateQueryService){
 	var createStateExpression = function createStateExpression(specification){
@@ -33,19 +34,46 @@ module.exports = function(eventBus, stateQueryService){
 	var createEventWatch = function createEventWatch(specification){
 		console.log('creating event expression with spec ' + JSON.stringify(specification));
 		var expression = new EventEmitter();
+		var isWatching = false;		
+
+		var triggerEvent = function triggerEvent(){
+			expression.emit('triggered');
+		}
 			
+		if(specification.eventMatching){
+			var processEventMatching = function processEventMatching(e){
+				if(!isWatching){
+					return;
+				}				
+				if(objectMatches(e, specification.eventMatching)){
+					triggerEvent();
+				}	
+			};
+			
+			expression.on('processing event',processEventMatching);			
+		}
+
+		if(specification.cron){
+			var cronJob = new cron.CronJob(specification.cron, triggerEvent);
+			expression.on('starting watch', cronJob.start);
+			expression.on('stopping watch', cronJob.stop);
+		}
+
 		var handleEvent = function(e){
 			console.log('event detected');
-			if(objectMatches(e, specification.eventMatching)){
-				expression.emit('triggered');
-			}
-		};		
+			expression.emit('processing event',e);			
+		};
+
 
 		return {
-			startWatch:function(){
+			startWatch:function(){				
+				isWatching = true;
+				expression.emit('starting watch');
 				eventBus.on('event created', handleEvent); //prefer it if the event bus wasnt just the context engine with its odd event name
 			},
 			stopWatch:function(){
+				isWatching = false;
+				expression.emit('stopping watch');
 				eventBus.removeListener('event', handleEvent);
 			},
 			on:expression.on.bind(expression)

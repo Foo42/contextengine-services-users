@@ -1,5 +1,6 @@
 var assert = require("assert");
 var EventEmitter = require('events').EventEmitter;
+var proxyquire = require('proxyquire');
 
 var eventBus = new EventEmitter();
 
@@ -42,7 +43,7 @@ var setState = stateQueryService.setState;
 delete stateQueryService.setState;
 
 
-var ContextExpression = require('../core/ContextExpression')(eventBus, stateQueryService);
+var ContextExpression;
 
 //TODO: 
 	// * State expression stopWatch
@@ -56,6 +57,7 @@ describe('Context expressions', function(){
 		states = {};
 		stateQueryService.cleanUp();
 		done();
+		ContextExpression = require('../core/ContextExpression')(eventBus, stateQueryService);
 	});
 
 	
@@ -189,7 +191,41 @@ describe('Context expressions', function(){
 			});
 
 			describe('cron events', function(){
+				it('should create a cron job when expression spec has cron property',function(done){
+					var specification = {
+						on:{
+							cron:'00 26 12 * * *'
+						}
+					};
 
+					var fakeCronJob;
+					var fakes = {
+						'cron': {
+							CronJob: function(spec, cb){
+								assert.equal(spec, '00 26 12 * * *');
+								fakeCronJob = {
+									fire:cb,
+									started:false,
+									start:function(){fakeCronJob.started = true;}
+								};
+								return fakeCronJob;
+							}
+						}
+					};
+
+					ContextExpression = proxyquire('../core/ContextExpression',fakes)(eventBus, stateQueryService);
+
+					var expression = ContextExpression.createEventExpression(specification);
+										
+					expression.startWatch();
+					assert.ok(fakeCronJob.started);
+					
+					expression.on('triggered', function(){
+						done();
+					});
+
+					fakeCronJob.fire();
+				});
 			});
 		});
 
