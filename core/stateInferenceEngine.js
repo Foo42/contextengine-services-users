@@ -4,14 +4,11 @@ var EventEmitter = require('events').EventEmitter;
 var _ = require('lodash');
 var userConfigurationAccess = require('./userConfigurationAccess');
 var async = require('async');
-var cron = require('cron');
 var binaryState = require('./State').binaryState;
 
 
 module.exports = (function(){
 	var module = {};
-
-	
 
 	module.attachListener = function(contextEngine, done){
 		console.info('attatching state inference engine');

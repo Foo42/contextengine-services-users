@@ -1,10 +1,22 @@
 var assert = require("assert")
 var StateInferenceEngine = require('../core/stateInferenceEngine');
+var EventEmitter = require('events').EventEmitter;
 
 describe('StateInferenceEngine', function(){
   var createFakeState = function createFakeState(name){
-    var state = {on:function(){}, name:name, active:false};
-    state.activate = function activate(){state.active = true;};
+    //There is too much logic here - we should refactor to use real states
+    var state = new EventEmitter();
+    state.name = name;
+    state.active = false;
+    state.activate = function activate(){
+      state.active = true;
+      state.emit('activated')
+    };
+    state.deactivate = function(){
+      state.active = false;
+      state.emit('deactivated');
+    }
+
     return state;
   }
 
@@ -58,7 +70,7 @@ describe('StateInferenceEngine', function(){
 
   	describe('Querying active states', function(){
   		describe('getActiveStates', function(){
-  			it.only('should list names of active states', function(done){
+  			it('should list names of active states', function(done){
   				var states = [createFakeState('foo'), createFakeState('bar')];
   				states[0].activate();
   				var engine = new StateInferenceEngine.StateInferenceEngine(states);
@@ -70,7 +82,7 @@ describe('StateInferenceEngine', function(){
 
   		describe('isStateActive', function(){
   			it('should return whether state is active', function(done){
-  				var states = [new StateInferenceEngine.State({name:'foo'}), new StateInferenceEngine.State({name:'bar'})];
+  				var states = [createFakeState('foo'), createFakeState('bar')];
   				states[0].activate();
   				var engine = new StateInferenceEngine.StateInferenceEngine(states);
   				engine.isStateActive('foo', function(err, result){
@@ -89,7 +101,7 @@ describe('StateInferenceEngine', function(){
 		it('should raise a stateChange.actived event when a state becomes active', function(done){
 			var eventRecieved;
 			
-			var states = [new StateInferenceEngine.State({name:'foo'}), new StateInferenceEngine.State({name:'bar'})];
+			var states = [createFakeState('foo'), createFakeState('bar')];
 			var engine = new StateInferenceEngine.StateInferenceEngine(states);
 			engine.on('stateChange.activated', function(event){
 				eventRecieved = event;
