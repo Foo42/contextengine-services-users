@@ -2,13 +2,19 @@ var assert = require("assert")
 var StateInferenceEngine = require('../core/stateInferenceEngine');
 
 describe('StateInferenceEngine', function(){
+  var createFakeState = function createFakeState(name){
+    var state = {on:function(){}, name:name, active:false};
+    state.activate = function activate(){state.active = true;};
+    return state;
+  }
+
  	describe('Adding states', function(){
  		it('should add states to internal collection', function(done){
- 			var stateToAdd = new StateInferenceEngine.State({name:'test', active:true});
+ 			var fakeState = {on:function(){}};
  			var engine = new StateInferenceEngine.StateInferenceEngine();
- 			engine.add(stateToAdd);
+ 			engine.add(fakeState);
  			engine.forEachState(function(state){
- 				if(state === stateToAdd){
+ 				if(state === fakeState){
  					done();
  				}
  			});
@@ -19,8 +25,8 @@ describe('StateInferenceEngine', function(){
  		describe('forEachState',function(){
  			it('should call the given function for each state, then call final func', function(done){
  				var states = [
- 					new StateInferenceEngine.State({name:'foo'}),
- 					new StateInferenceEngine.State({name:'foo'})
+ 					{name:'foo', on:function(){}},
+ 					{name:'bar', on:function(){}}
  				];
 
  				var engine = new StateInferenceEngine.StateInferenceEngine(states);
@@ -39,7 +45,7 @@ describe('StateInferenceEngine', function(){
   	describe('When event recieved', function(){  
   		it('should pass event to every state', function(done){
   			var eventCalledWith;
-  			var state = new StateInferenceEngine.State({name:'test'});
+  			var state = {name:'test', on:function(){}};
   			state.processEvent = function(ev){eventCalledWith = ev};
   			var engine = new StateInferenceEngine.StateInferenceEngine([state]);
 			var testEvent = {type:'test event'};
@@ -52,8 +58,8 @@ describe('StateInferenceEngine', function(){
 
   	describe('Querying active states', function(){
   		describe('getActiveStates', function(){
-  			it('should list names of active states', function(done){
-  				var states = [new StateInferenceEngine.State({name:'foo'}), new StateInferenceEngine.State({name:'bar'})];
+  			it.only('should list names of active states', function(done){
+  				var states = [createFakeState('foo'), createFakeState('bar')];
   				states[0].activate();
   				var engine = new StateInferenceEngine.StateInferenceEngine(states);
   				assert.equal(JSON.stringify(engine.getActiveStates()), JSON.stringify(['foo']));
@@ -100,7 +106,7 @@ describe('StateInferenceEngine', function(){
 		it('should raise a stateChange.deactived event when a state becomes inactive', function(done){
 			var eventRecieved;
 			
-			var states = [new StateInferenceEngine.State({name:'foo'}), new StateInferenceEngine.State({name:'bar'})];
+			var states = [createFakeState('foo'), createFakeState('bar')];
 			states[0].activate();
 			states[1].activate();
 
