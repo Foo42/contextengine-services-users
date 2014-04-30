@@ -1,10 +1,10 @@
-var objectMatches = require('./objectMatches');
+var objectMatches = require('../objectMatches');
 var util = require('util');
 var EventEmitter = require('events').EventEmitter;
 var _ = require('lodash');
-var userConfigurationAccess = require('./userConfigurationAccess');
+var userConfigurationAccess = require('../userConfigurationAccess');
 var async = require('async');
-var binaryState = require('./State').binaryState;
+var binaryState = require('./binaryState');
 
 
 module.exports = (function(){
@@ -26,8 +26,8 @@ module.exports = (function(){
 					var listener = new module.StateInferenceEngine();
 					
 
-					var stateQueryService = require('./State').stateQueryService(listener);
-					var expressionFactory = require('./ContextExpression')(contextEngine, stateQueryService);
+					var stateQueryService = require('./stateQueryService')(listener);
+					var expressionFactory = require('../ContextExpression')(contextEngine, stateQueryService);
 					
 					async.map(stateConfig.states,
 						function(stateConfig, done){

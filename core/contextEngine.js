@@ -16,13 +16,13 @@ var getValidDataPathForUser = function getValidDataPathForUser(user, done){
 
 var attachAllListeners = function attachAllListeners(contextEngine, done){
 	var listeners = [
-		'fileAppendingEventListener',
-		'stateInferenceEngine'];
+		fileAppendingEventListener,
+		require('./State').StateInferenceEngine];
 	
 	async.eachSeries(
 		listeners, 
-		function(listenerName, done){
-			var module = require('./'+listenerName);
+		function(listener, done){
+			var module = listener;
 			module.attachListener(contextEngine, done);
 		},
 		function(err){
