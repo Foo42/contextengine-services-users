@@ -6,6 +6,7 @@ var createRule = function(config, expressionFactory, callback){
 	state.active = false;
 
 	state.name = config.name || 'anon';
+	state.sha = config.sha;
 
 	var activate = function activate(){
 		if(state.active){

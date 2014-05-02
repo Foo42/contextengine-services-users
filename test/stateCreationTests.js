@@ -3,6 +3,22 @@ var binaryState = require('../core/State').binaryState;
 var EventEmitter = require('events').EventEmitter;
 
 describe('State creation', function(){
+	describe('Basic properties',function(){
+		it('should have a name taken from specification if present',function(done){
+			var mockExpressionFactory = {};
+			binaryState.createRule({name:'bob'}, mockExpressionFactory, function(err, state){
+				assert.equal(state.name,'bob');
+				done();
+			});
+		});
+		it('should have a sha taken from specification if present',function(done){
+			var mockExpressionFactory = {};
+			binaryState.createRule({sha:'12345ABCDEF'}, mockExpressionFactory, function(err, state){
+				assert.equal(state.sha,'12345ABCDEF');
+				done();
+			});
+		});
+	});
 	describe('States with entry and exit conditions', function(){
 		it('should activate when enter event condition fires', function(done){
 			var specification = {

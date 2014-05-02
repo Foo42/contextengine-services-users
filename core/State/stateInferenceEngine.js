@@ -24,7 +24,9 @@ module.exports = (function(){
 					};
 					
 					var listener = new module.StateInferenceEngine();
-					
+					userConfig.watchStateConfig(function(newConfig){
+						console.log('state config changed for user ' + contextEngine.user.id);
+					});					
 
 					var stateQueryService = require('./stateQueryService')(listener);
 					var expressionFactory = require('../ContextExpression')(contextEngine, stateQueryService);
