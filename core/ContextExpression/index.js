@@ -16,7 +16,8 @@ module.exports = function(eventBus, stateQueryService){
 		var query = stateQueryService.createQuery(stateName);
 
 		return {
-			startWatch: function(){query.startWatch()},			
+			startWatch: function(){query.startWatch()},
+			stopWatch: function(){query.stopWatch()},			
 			on:function(event, callback){
 				console.log('stateExpression: adding subscriber to event: ' + event);
 				query.on(event, function(newValue){

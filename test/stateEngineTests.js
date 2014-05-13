@@ -16,6 +16,9 @@ describe('StateInferenceEngine', function(){
       state.active = false;
       state.emit('deactivated');
     }
+    state.dispose = function(){
+      state.disposed =true
+    }
 
     return state;
   }
@@ -32,6 +35,36 @@ describe('StateInferenceEngine', function(){
  			});
  		});
  	});
+
+  describe('Removing states', function(){
+    it('should remove states from internal collection which match given predicate', function(done){
+      var engine = new StateInferenceEngine.StateInferenceEngine();
+      engine.add(createFakeState('tom'));
+      engine.add(createFakeState('dick'));
+      engine.add(createFakeState('harry'));
+      
+      var nameOfStateToRemove = 'dick';
+      engine.removeStatesWhere(function(state){return state.name === nameOfStateToRemove}, function(err){
+        engine.forEachState(function(state){
+          if(state.name === nameOfStateToRemove){
+            assert.fail();
+          }          
+        });
+      done();  
+      });
+    });
+
+    it('should dispose states removed from collection', function(done){
+      var engine = new StateInferenceEngine.StateInferenceEngine();
+      var state = createFakeState('bob');
+      engine.add(state);
+      
+      engine.removeStatesWhere(function(state){return true}, function(err){
+        assert.ok(state.disposed);
+        done();
+      });
+    });
+  });
 
  	describe('Enumerating states', function(){
  		describe('forEachState',function(){

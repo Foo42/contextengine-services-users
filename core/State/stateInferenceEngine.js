@@ -6,6 +6,24 @@ var userConfigurationAccess = require('../userConfigurationAccess');
 var async = require('async');
 var binaryState = require('./binaryState');
 
+var addStatesFromConfig = function(contextEngine, listener, config, callback){
+	var stateQueryService = require('./stateQueryService')(listener);
+	var expressionFactory = require('../ContextExpression')(contextEngine, stateQueryService);
+	
+	async.map(
+		config,
+		function(stateConfig, done){
+			binaryState.createRule(stateConfig, expressionFactory, done);
+		}, 
+		function(err, states){
+			console.log('finished mapping state config to states: err: ' + err);
+			states.forEach(function(state){listener.add(state)});
+			console.log('added ' + states.length + ' states');
+			
+			callback(null)			
+		}
+	);
+}
 
 module.exports = (function(){
 	var module = {};
@@ -24,28 +42,28 @@ module.exports = (function(){
 					};
 					
 					var listener = new module.StateInferenceEngine();
-					userConfig.watchStateConfig(function(newConfig){
-						console.log('state config changed for user ' + contextEngine.user.id);
-					});					
 
-					var stateQueryService = require('./stateQueryService')(listener);
-					var expressionFactory = require('../ContextExpression')(contextEngine, stateQueryService);
-					
-					async.map(stateConfig.states,
-						function(stateConfig, done){
-							binaryState.createRule(stateConfig, expressionFactory, done);
-						}, 
-						function(err, states){
-							console.log('finished mapping state config to states: err: ' + err);
-							states.forEach(function(state){listener.add(state)});
-							
-							listener.on('stateChange.activated', function(event){contextEngine.registerNewEvent(event,function(){})});
-							listener.on('stateChange.deactivated', function(event){contextEngine.registerNewEvent(event,function(){})});
+					userConfig.watchStateConfig(function(newConfig, delta){
+						console.log('state config changed for user ' + contextEngine.user.id + ' ' + delta.added.length + ' states added ' + delta.removed.length + ' states removed');
+						var stateHasSha = function(sha){return function(state){return state.sha === sha}};
+						var isRemovedState = function(state){
+							return _.find(delta.removed, stateHasSha(state.sha));
+						};
+						
+						listener.removeStatesWhere(isRemovedState, function(err){
+							if(err){return};
+							addStatesFromConfig(contextEngine, listener, delta.added, function(){});	
+						});
+					});
 
-							contextEngine.states = listener;
-							done(null)			
-						}
-					);
+					addStatesFromConfig(contextEngine, listener, stateConfig.states, function(){
+						listener.on('stateChange.activated', function(event){contextEngine.registerNewEvent(event,function(){})});
+						listener.on('stateChange.deactivated', function(event){contextEngine.registerNewEvent(event,function(){})});
+
+						contextEngine.states = listener;
+
+						done();
+					});
 				}
 			],
 			done
@@ -70,6 +88,13 @@ module.exports = (function(){
 				self.emit('stateChange.deactivated', stateActivedEvent);
 			});
 		};
+
+		self.removeStatesWhere = function removeStatesWhere(predicate, callback){
+			var removed = _.remove(states, predicate);
+			removed.forEach(function(state){state.dispose()});
+			console.log('removed ' + removed.length + ' states');
+			callback(null, removed);
+		}
 		
 		self.processEvent = function(event){
 			states.forEach(function(state){state.processEvent(event)});

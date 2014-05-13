@@ -28,11 +28,17 @@ var stateQueryService = (function(){
 				return callback(null,states[stateName]);
 			};
 			query.startWatch = function(){				
+				query.watching = true;
 				stateWatches.on(stateName, function(newValue){
 					console.log('about to emit valueChanged to subs ' + Object.keys(query._events));					
-					query.emit('valueChanged',newValue);
+					if(query.watching){
+						query.emit('valueChanged',newValue);	
+					}					
 				});
 				query.emit('watching');
+			}
+			query.stopWatch = function(){
+				query.watching = false;
 			}
 			return query;
 		}
@@ -125,6 +131,30 @@ describe('Context expressions', function(){
 				if(isActive){
 					done();
 				}
+			});	
+		});
+
+		it('should not raise events when stop watch has been called', function(done){
+			var specification = {
+				whilst:{
+					isActive:'Monday'
+				}
+			};
+
+			setState('Monday', false);
+
+			var expression = ContextExpression.createStateExpression(specification);			
+			expression.startWatch();
+			expression.stopWatch();
+
+			setTimeout(function(){
+				setState('Monday', true);
+				setTimeout(done, 100);
+			},300);
+			
+
+			expression.on('valueChanged', function(isActive){
+				assert.fail();
 			});	
 		});
 

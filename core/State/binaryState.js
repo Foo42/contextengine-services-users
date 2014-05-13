@@ -7,6 +7,9 @@ var createRule = function(config, expressionFactory, callback){
 
 	state.name = config.name || 'anon';
 	state.sha = config.sha;
+	state.dispose = function(){
+		state.emit('disposing');
+	}
 
 	var activate = function activate(){
 		if(state.active){
@@ -40,6 +43,9 @@ var createRule = function(config, expressionFactory, callback){
 
 			result ? activate() : deactivate();
 		});
+
+		state.on('disposing', function(){stateExpression.stopWatch()});
+			
 	} else if(config.enter || config.exit){
 		console.log('state has enter / exit conditions');
 		if(config.enter){
@@ -58,6 +64,7 @@ var createRule = function(config, expressionFactory, callback){
 				activate();
 			});
 
+			state.on('disposing', function(){entryExpression.stopWatch()});
 			entryExpression.startWatch();
 		}
 
@@ -72,6 +79,7 @@ var createRule = function(config, expressionFactory, callback){
 			exitExpression.on('triggered', function(){
 				deactivate();
 			});
+			state.on('disposing', function(){exitExpression.stopWatch()});
 		}
 	}
 

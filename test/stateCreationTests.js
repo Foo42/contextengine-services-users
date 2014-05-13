@@ -1,8 +1,17 @@
 var assert = require("assert");
 var binaryState = require('../core/State').binaryState;
 var EventEmitter = require('events').EventEmitter;
+var _ = require('lodash');
 
 describe('State creation', function(){
+	var fakeStateExpression;
+
+	var mockExpressionFactory = {
+		createStateExpression:function(config){
+			return fakeStateExpression;
+		}
+	};
+
 	describe('Basic properties',function(){
 		it('should have a name taken from specification if present',function(done){
 			var mockExpressionFactory = {};
@@ -112,18 +121,55 @@ describe('State creation', function(){
 
 				entryCondition.forceTrigger();
 			});
+
+			describe("disposing states with entry and exit conditions", function(){
+				it('should ensure any event expressions have their watches stopped', function(done){					
+					var specification = {
+						enter:{
+							on:{
+								entryStuff:'this doesnt matter'
+							}
+						},
+						exit:{
+							on:{
+								exitStuff:'stuff which doesnt matter for this test'
+							}
+						}
+					};
+
+					var createFakeEventExpression = function(){
+						var fakeEventExpression = new EventEmitter();
+						fakeEventExpression.watching = false;
+						fakeEventExpression.startWatch = function(){fakeEventExpression.watching = true};
+						fakeEventExpression.stopWatch = function(){fakeEventExpression.watching = false};
+						return fakeEventExpression;
+					}
+
+					var eventExpressions = [];
+					var mockExpressionFactory = {
+						createEventExpression: function(spec){
+							var fakeExpression = createFakeEventExpression();
+							fakeExpression.spec = spec;
+							eventExpressions.push(fakeExpression);
+							return fakeExpression;
+						}
+					};
+
+					binaryState.createRule(specification, mockExpressionFactory, function(err, state){																		
+						state.dispose();
+						var expressionIsWatching = function expressionIsWatching(expression){return expression.watching;}
+						var someExpressionsStillWatching = _.any(eventExpressions, expressionIsWatching);
+						eventExpressions.filter(expressionIsWatching).forEach(function(expression){console.log(JSON.stringify(expression.spec) + ' still watching')});
+						assert.equal(someExpressionsStillWatching, false);
+						done();
+					});		
+				});
+			});
 		});
 	});
 
 	describe('States with a an active condition', function(){
-		var expressionValue = true;
-		var fakeStateExpression;
-
-		var mockExpressionFactory = {
-			createStateExpression:function(config){
-				return fakeStateExpression;
-			}
-		};
+		var expressionValue = true;		
 
 		it('should get its initial state from a stateExpression', function(done){
 			var expressionValue = true;
@@ -196,6 +242,37 @@ describe('State creation', function(){
 				fakeStateExpression.emit('valueChanged', expressionValue);
 
 				
+			});
+		});
+	});
+
+	describe("Disposing a state rule", function(){
+		it('should stop watching isActive whilst expressions', function(done){
+			fakeStateExpression = new EventEmitter();
+
+			fakeStateExpression.evaluate = function(callback){
+					return callback(null, true);
+			};
+			fakeStateExpression.startWatch = function(){
+				fakeStateExpression.isWatching = true;
+			};
+			fakeStateExpression.stopWatch = function(){
+				done();
+			};
+
+			var specification = {
+				isActive:{
+					whilst:{
+						isActive:'whatever'
+					}
+				}
+			};
+
+			binaryState.createRule(specification, mockExpressionFactory, function(err, state){
+				if(err){
+					assert.fail();
+				}
+				state.dispose();
 			});
 		});
 	});
