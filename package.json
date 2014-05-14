@@ -9,6 +9,8 @@
   "dependencies": {
     "ejs": "~0.8.5",
     "express": "~3.2.4",
+    "consolidate": "~0.9.0",
+    "swig": "~0.13.5",
     "less-middleware": "~0.1.15",
     "filtr": "~0.3.0",
     "passport": "~0.2.0",

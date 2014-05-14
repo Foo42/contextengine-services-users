@@ -3,6 +3,8 @@
  * Module dependencies.
  */
 
+var viewsDir = __dirname + '/views'
+
 var express = require('express')
   , routes = require('./routes')
   , contextEngines = require('./core/contextEngine').createContextEnginesForRegisteredUsers()
@@ -11,14 +13,17 @@ var express = require('express')
   , events = require('./routes/events')()
   , states = require('./routes/states')()
   , http = require('http')
+  , cons = require('consolidate')
+  , swig = require('swig').init({cache:false, root:viewsDir})
   , path = require('path');
 
 var app = express();
+app.engine('html', cons.swig);
 
 // all environments
 app.set('port', process.env.PORT || 9005);
-app.set('views', __dirname + '/views');
-app.set('view engine', 'ejs');
+app.set('views', viewsDir);
+app.set('view engine', 'html');
 app.use(express.favicon());
 app.use(express.logger('dev'));
 app.use(express.cookieParser());
