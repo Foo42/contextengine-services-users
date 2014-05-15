@@ -15,7 +15,10 @@ module.exports = {
 		var access = {};
 
 		access.setStateConfig = function setStateConfig(newConfig, done){					
-			fs.writeFile(stateConfigPath, JSON.stringify(newConfig), done);
+			var copyOfConfig = JSON.parse(JSON.stringify(newConfig));
+			copyOfConfig.states.forEach(function(state){delete state.sha});
+
+			fs.writeFile(stateConfigPath, JSON.stringify(copyOfConfig), done);
 		} 
 
 		access.getStateConfig = function getStateConfig(done){

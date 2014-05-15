@@ -26,10 +26,10 @@ describe('userConfigurationAccess', function(){
 		var userConfigurationAccess = proxyquire('../core/userConfigurationAccess', {'fs':stubfs});	
 		
 		describe('setting state config', function(){
-			it('should write the new config to the users state config file in their data dir', function(done){
+			it('should write the new config to the users state config file in their data dir, removing any states sha properties', function(done){
 				var fakeUser = {id:'someone'};
 				var usersStateFilePathEnding = '/data/userSpecific/someone/config/stateConfig.json'
-				var newConfig = {states:[{name:'foo'}]};
+				var newConfig = {states:[{name:'foo', sha:'abcdef1234'}]};
 				var expectedContent = '{"states":[{"name":"foo"}]}';
 
 				
