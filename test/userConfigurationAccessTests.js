@@ -24,6 +24,27 @@ describe('userConfigurationAccess', function(){
 		});
 
 		var userConfigurationAccess = proxyquire('../core/userConfigurationAccess', {'fs':stubfs});	
+		
+		describe('setting state config', function(){
+			it('should write the new config to the users state config file in their data dir', function(done){
+				var fakeUser = {id:'someone'};
+				var usersStateFilePathEnding = '/data/userSpecific/someone/config/stateConfig.json'
+				var newConfig = {states:[{name:'foo'}]};
+				var expectedContent = '{"states":[{"name":"foo"}]}';
+
+				
+				stubfs.writeFile = function(path, content, cb){
+					assert.equal(true, pathEndsWith(path, usersStateFilePathEnding));
+					assert.equal(content, expectedContent);
+					cb(null);
+				};
+
+				var access = userConfigurationAccess.forUser(fakeUser);
+				access.setStateConfig(newConfig, function(err){
+					done();
+				});
+			});
+		});
 
 		describe('accessing state config', function(){					
 			it('should return state config from the users state config file in their data dir', function(done){

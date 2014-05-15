@@ -12,6 +12,7 @@ var express = require('express')
   , authentication = require('./authentication').initialise(contextEngines.getContextEngineForUser)
   , events = require('./routes/events')()
   , states = require('./routes/states')()
+  , config = require('./routes/config')
   , http = require('http')
   , cons = require('consolidate')
   , swig = require('swig').init({cache:false, root:viewsDir})
@@ -49,6 +50,9 @@ app.post('/events/text', authentication.ensureAuthenticated, events.capture.text
 app.get('/events/recent', authentication.ensureAuthenticated, events.listRecent);
 
 app.get('/states/active', authentication.ensureAuthenticated, states.listActive);
+
+app.get('/config/states', authentication.ensureAuthenticated, config.getStateConfig);
+app.post('/config/states', authentication.ensureAuthenticated, config.setStateConfig);
 
 http.createServer(app).listen(app.get('port'), function(){
   console.log('Express server listening on port ' + app.get('port'));

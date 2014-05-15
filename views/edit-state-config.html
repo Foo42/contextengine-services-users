@@ -1,0 +1,18 @@
+{% extends './layout/standard.html' %}
+
+{% block mainContent %}
+
+<h1>{{title}}</h1>
+<code>
+	<pre>
+{{formattedConfig}}
+	</pre>
+</code>
+<form method="POST">
+	<textarea name="configJSON" style="width:100%;" rows="30">
+		{{formattedConfig}}
+	</textarea>
+	<input type="Submit"></input>
+</form>
+
+{% endblock %}

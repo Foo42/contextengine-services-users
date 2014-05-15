@@ -38,8 +38,8 @@ module.exports = function(){
 			}
 			
 			contextEngine.getRecentEvents(function(err, recentEvents){
-				var eventsVm = recentEvents.map(function(event){return {type:event.type, detail:event.text || event.stateName}})
-				res.render('events-list', {title:'Recent Events', events:recentEvents});
+				var eventsVm = recentEvents.map(function(event){return {type:event.type, detail:(event.text || event.stateName)}})
+				res.render('events-list', {title:'Recent Events', events:eventsVm});
 			});
 		});
 	}

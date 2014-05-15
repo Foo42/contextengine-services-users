@@ -12,7 +12,11 @@ module.exports = {
 		var stateConfigPath = path.join(userConfigPath, 'stateConfig.json');
 		
 		var events = new EventEmitter();
-		var access = {}; 
+		var access = {};
+
+		access.setStateConfig = function setStateConfig(newConfig, done){					
+			fs.writeFile(stateConfigPath, JSON.stringify(newConfig), done);
+		} 
 
 		access.getStateConfig = function getStateConfig(done){
 			console.info('getting state config for user ' + user.id);
