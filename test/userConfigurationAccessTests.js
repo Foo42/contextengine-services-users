@@ -5,7 +5,8 @@ var path = require('path');
 
 
 describe('userConfigurationAccess', function(){
-	console.log(it);
+	
+
 	describe('accessing config for specific user', function(){
 		var userConfigurationAccess = require('../core/userConfigurationAccess');
 		it('should return an object for accessing config of a user', function(done){
@@ -46,7 +47,33 @@ describe('userConfigurationAccess', function(){
 			});
 		});
 
-		describe('accessing state config', function(){					
+		describe('accessing state config', function(){
+			var fakeFileError = {errno:34, code:'ENOENT'};
+
+			it('should return a default object for people without a config file and create the file', function(done){
+				var fakeUser = {id:'someone'};
+				var usersStateFilePathEnding = '/data/userSpecific/someone/config/stateConfig.json'
+				var expectedDefaultConfig = {states:[]};
+				var fileWasWritten = false;
+
+				stubfs.readFile = function(path, cb){
+					return cb(fakeFileError,null)
+				};
+				stubfs.writeFile = function(path, content, cb){
+					assert.equal(true, pathEndsWith(path, usersStateFilePathEnding));
+					assert.equal(content, JSON.stringify(expectedDefaultConfig), 'file not written with expected content');
+					fileWasWritten = true;
+					cb(null);
+				};
+
+				var access = userConfigurationAccess.forUser(fakeUser);
+				access.getStateConfig(function(err, config){
+					assert.equal(JSON.stringify(config), JSON.stringify(expectedDefaultConfig), 'unexpected config returned');				
+					assert.equal(true, fileWasWritten, 'file not written');
+					done();
+				});
+			});
+
 			it('should return state config from the users state config file in their data dir', function(done){
 				var fakeUser = {id:'someone'};
 				

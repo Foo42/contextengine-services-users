@@ -107,7 +107,12 @@ module.exports = (function(){
 			console.log('getting context engine for user ' + user.id + ' ' + contextEngineCreationProgress.done);
 			if(contextEngineCreationProgress.done){
 				console.log('got context engine for user ' + user.id);
-				return done(null, engines[user.id]);
+				var engineForUser = engines[user.id];
+				if(!engineForUser){
+					return done("Failed to find engine for user");
+				}
+
+				return done(null, engineForUser);
 			}
 
 			contextEngineCreationProgress.on('createdAllEngines',function(){

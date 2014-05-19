@@ -24,16 +24,8 @@ module.exports = {
 		access.getStateConfig = function getStateConfig(done){
 			console.info('getting state config for user ' + user.id);
 			
-			fs.readFile(stateConfigPath, function(err, fileContent){
-				var fileContent = fileContent || '{"states":[]}';
-				
-				//It's ok if the file isnt there, we'll use a default config
-				if(err && err.code == 'ENOENT'){
-					err = null;
-				}
 
-				err && console.error('error reading state config ' + err);
-
+			var createStateConfigFromJSONString = function createStateConfigFromJSONString(fileContent){
 				config = JSON.parse(fileContent);
 
 				config.states.forEach(function(state){
@@ -41,8 +33,24 @@ module.exports = {
 					hash.update(JSON.stringify(state));
 					state.sha = hash.digest('hex');
 				});
+				return config;	
+			}
 
-				done(err, config);
+			console.log('about to try reading state config file');
+			fs.readFile(stateConfigPath, function(err, fileContent){
+				if(err && err.code == 'ENOENT'){
+					fileContent = '{"states":[]}'
+					fs.writeFile(stateConfigPath, fileContent, function(err){
+						if(err){
+							return done(err);
+						}
+		
+						done(null, createStateConfigFromJSONString(fileContent));
+					});
+				} else {
+		
+					done(err, createStateConfigFromJSONString(fileContent));
+				}
 			});
 		};
 
