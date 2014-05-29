@@ -1,18 +1,107 @@
 {% extends './layout/standard.html' %}
 
+{% block headJS %}
+<script type="text/javascript" src="/js/libs/knockout-2.2.1.debug.js"></script>
+{% endblock %}
+
 {% block mainContent %}
 
+<style type="text/css">
+	article.state.editing .display-view{
+		display: none;
+	}
+	article.state:not(.editing) .editing-view{
+		display: none;
+	}
+
+	.unsaved {
+		border: 1px solid red;
+	}
+</style>
+
 <h1>{{title}}</h1>
+<div>
+	<div data-bind="foreach: states, css:{unsaved:hasUnsavedChanges}">
+		<article class="state" data-bind="css:{editing:isEditing}">
+			<div class="display-view">
+				<span data-bind="text:name"></span><button data-bind="click:edit">Edit</button>
+			</div>
+			<div class="editing-view">
+				<input data-bind="value:name">
+				<button data-bind="click:stopEditing">Done</button>
+			</div>
+			
+		</article>
+	</div>
+</div>
 <code>
-	<pre>
-{{formattedConfig}}
+	<pre data-bind="text:currentConfigJSON">
 	</pre>
 </code>
-<form method="POST">
-	<textarea name="configJSON" style="width:100%;" rows="30">
-		{{formattedConfig}}
-	</textarea>
-	<input type="Submit"></input>
-</form>
+<button data-bind="click:saveConfig, enable:hasUnsavedChanges">Save Config</button>
+
+<script type="text/javascript">
+	var stripKOPropertiesFromState = function(state){
+		delete state.isEditing;
+		delete state.isDirty;
+		return state;
+	};
+
+	var createStateVM = function createStateVM(stateConfig){
+		var stateVM = JSON.parse(JSON.stringify(stateConfig));
+		delete stateVM.sha;
+		var baselineJSON = JSON.stringify(stateVM);
+		stateVM.name = ko.observable(stateConfig.name);
+		stateVM.isEditing = ko.observable(false);
+
+		stateVM.edit = function edit(){stateVM.isEditing(true)};
+		stateVM.stopEditing = function stopEditing(){stateVM.isEditing(false)};
+
+		stateVM.getModel = function getModel(){
+			return stripKOPropertiesFromState(ko.toJS(stateVM));
+		}
+
+		stateVM.isDirty = ko.dependentObservable(function(){
+			return JSON.stringify(this.getModel()) !== baselineJSON;
+		},stateVM);
+
+		return stateVM;
+	};
+
+	var originalConfig = JSON.parse( '{{ config|raw }}' );
+
+	var rootVM = {
+		states: ko.observableArray(originalConfig.states.map(createStateVM))
+	};
+
+	rootVM.getModel = function getModel(){
+		var model = {};
+		model.states = rootVM.states().map(function(state){return state.getModel()});
+		return model;
+	}
+
+	rootVM.currentConfigJSON = ko.computed(function(){
+		return JSON.stringify(this.getModel(),null,4);
+	},rootVM);
+
+	rootVM.hasUnsavedChanges = ko.dependentObservable(function(){
+		return this.states().filter(function(state){return state.isDirty()}).length > 0;
+	},rootVM);
+
+	rootVM.saveConfig = function saveConfig(){
+		var configToUpload = rootVM.currentConfigJSON();
+		var request = new XMLHttpRequest();
+		request.onreadystatechange = function(){
+			if(request.readyState === 4 && request.status >= 200 && request.status < 300){
+				rootVM.lastSaved(configToUpload)
+			}
+		};
+		request.open('POST', '/config/states');
+		request.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+		request.send(encodeURIComponent('configJSON') + '=' + encodeURIComponent(configToUpload));
+	}
+
+	ko.applyBindings(rootVM);
+</script>
 
 {% endblock %}
