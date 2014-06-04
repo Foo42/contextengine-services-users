@@ -17,6 +17,21 @@
 	.unsaved {
 		border: 1px solid red;
 	}
+
+	.state{
+		margin-top: 2em;
+		margin-bottom: 2em;
+
+		padding:1em;
+		padding-top: 2em;
+		
+
+		border-bottom: 1px solid black;
+	}
+
+	.editing-view {
+		background-color: whitesmoke;
+	}
 </style>
 
 <h1>{{title}}</h1>
@@ -24,14 +39,26 @@
 	<div data-bind="foreach: states, css:{unsaved:hasUnsavedChanges}">
 		<article class="state" data-bind="css:{editing:isEditing}">
 			<div class="display-view">
-				<span data-bind="text:name"></span><button data-bind="click:edit">Edit</button>
+				<span data-bind="text:name, click:edit"></span>
 			</div>
 			<div class="editing-view">
 				<input data-bind="value:name">
+				<div class="conditions-editing-view">
+					<div>
+						<select data-bind="value: conditions().conditionsMode">
+							<option value="none">No Conditions</option>
+							<option value="events">Events to enter and exit</option>
+							<option value="state">Active while stateful conditions are true</option>
+						</select>
+					</div>
+				</div>
 				<button data-bind="click:stopEditing">Done</button>
-			</div>
-			
+			</div>			
 		</article>
+	</div>
+	<div>
+		<input placeholder="name" data-bind="value:newStateName">
+		<button data-bind="click:addNewState">Create New State</button>
 	</div>
 </div>
 <code>
@@ -47,6 +74,61 @@
 		return state;
 	};
 
+	var createEventExpressionVM = function createEventExpressionVM(config){		
+		return config;
+	};
+
+	var createStateExpressionVM = function createStateExpressionVM(config){
+		return config;
+	};
+
+	var createStateConditionsVM = function createStateConditionsVM(stateConfig){
+		var vm = {};
+		vm.enter = ko.observable(stateConfig.enter);
+		vm.exit = ko.observable(stateConfig.exit);
+		vm.isActive = ko.observable(stateConfig.isActive);
+
+		vm.eventDriven = ko.dependentObservable(function(){return vm.exit() || vm.enter();},vm);
+		vm.stateDriven = ko.dependentObservable(function(){return vm.isActive();},vm);
+		vm.hasConditions = ko.dependentObservable(function(){return this.eventDriven() || this.stateDriven()},vm);
+
+		vm.conditionsMode = ko.dependentObservable({
+			read:function(){
+				if(! this.hasConditions()){
+					return "none";
+				}
+				if(this.isActive()){
+					return "state";
+				}
+				return "events";
+			},
+			write:function(val){
+				if(val !== 'events'){
+					vm.enter(undefined);
+					vm.exit(undefined);
+				} else{
+					vm.enter(createEventExpressionVM({on:{}}));
+					vm.exit(createEventExpressionVM({on:{}}))
+				}
+
+				if(val !== 'state'){
+					vm.isActive(undefined);
+				} else {
+					vm.isActive(createStateExpressionVM({whilst:{}}));
+				}
+			}
+		},vm);
+
+		vm.eventDrivenConditionsVM = ko.observable();	
+
+		vm.writeToModel = function writeToModel(model){
+			model.enter = vm.enter();
+			model.exit = vm.exit();
+			model.isActive = vm.isActive();
+		}
+		return vm;
+	}
+
 	var createStateVM = function createStateVM(stateConfig){
 		var stateVM = JSON.parse(JSON.stringify(stateConfig));
 		delete stateVM.sha;
@@ -55,11 +137,17 @@
 		stateVM.isEditing = ko.observable(false);
 
 		stateVM.edit = function edit(){stateVM.isEditing(true)};
-		stateVM.stopEditing = function stopEditing(){stateVM.isEditing(false)};
+		stateVM.stopEditing = function stopEditing(){stateVM.isEditing(false)};		
+
+		stateVM.conditions = ko.observable(createStateConditionsVM(stateConfig));
 
 		stateVM.getModel = function getModel(){
-			return stripKOPropertiesFromState(ko.toJS(stateVM));
-		}
+			var model = {
+				name:stateVM.name()
+			};
+			stateVM.conditions().writeToModel(model);
+			return model;
+		};
 
 		stateVM.isDirty = ko.dependentObservable(function(){
 			return JSON.stringify(this.getModel()) !== baselineJSON;
@@ -100,6 +188,14 @@
 		request.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 		request.send(encodeURIComponent('configJSON') + '=' + encodeURIComponent(configToUpload));
 	}
+
+	rootVM.newStateName = ko.observable();
+	rootVM.addNewState = function addNewState(){
+		var newStateVm = createStateVM({name:rootVM.newStateName()});
+		newStateName.isEditing(true);
+		rootVM.states.push(newStateVm);
+		rootVM.newStateName("");
+	};
 
 	ko.applyBindings(rootVM);
 </script>
