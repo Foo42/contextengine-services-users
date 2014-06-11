@@ -4,35 +4,11 @@
 <script type="text/javascript" src="/js/libs/knockout-2.2.1.debug.js"></script>
 {% endblock %}
 
+{% block headCss %}
+	<link rel="stylesheet" type="text/css" href="/stylesheets/editConfig.css">
+{% endblock %}
+
 {% block mainContent %}
-
-<style type="text/css">
-	article.state.editing .display-view{
-		display: none;
-	}
-	article.state:not(.editing) .editing-view{
-		display: none;
-	}
-
-	.unsaved {
-		border: 1px solid red;
-	}
-
-	.state{
-		margin-top: 2em;
-		margin-bottom: 2em;
-
-		padding:1em;
-		padding-top: 2em;
-		
-
-		border-bottom: 1px solid black;
-	}
-
-	.editing-view {
-		background-color: whitesmoke;
-	}
-</style>
 
 <h1>{{title}}</h1>
 <div>
@@ -43,13 +19,24 @@
 			</div>
 			<div class="editing-view">
 				<input data-bind="value:name">
-				<div class="conditions-editing-view">
+				<div class="conditions-editing-view" data-bind="with:conditions">
 					<div>
-						<select data-bind="value: conditions().conditionsMode">
+						<select data-bind="value: conditionsMode">
 							<option value="none">No Conditions</option>
 							<option value="events">Events to enter and exit</option>
 							<option value="state">Active while stateful conditions are true</option>
 						</select>
+					</div>
+					<div data-bind="visible:eventDriven">
+						<div data-bind="with:enter">
+							<span>Enter on: </span><input data-bind="value:json">
+						</div>
+						<div data-bind="with:exit">
+							<span>Exit on: </span><input data-bind="value:json">
+						</div>
+					</div>
+					<div data-bind="visible:stateDriven">
+						State editing stuff
 					</div>
 				</div>
 				<button data-bind="click:stopEditing">Done</button>
@@ -66,138 +53,8 @@
 	</pre>
 </code>
 <button data-bind="click:saveConfig, enable:hasUnsavedChanges">Save Config</button>
-
 <script type="text/javascript">
-	var stripKOPropertiesFromState = function(state){
-		delete state.isEditing;
-		delete state.isDirty;
-		return state;
-	};
-
-	var createEventExpressionVM = function createEventExpressionVM(config){		
-		return config;
-	};
-
-	var createStateExpressionVM = function createStateExpressionVM(config){
-		return config;
-	};
-
-	var createStateConditionsVM = function createStateConditionsVM(stateConfig){
-		var vm = {};
-		vm.enter = ko.observable(stateConfig.enter);
-		vm.exit = ko.observable(stateConfig.exit);
-		vm.isActive = ko.observable(stateConfig.isActive);
-
-		vm.eventDriven = ko.dependentObservable(function(){return vm.exit() || vm.enter();},vm);
-		vm.stateDriven = ko.dependentObservable(function(){return vm.isActive();},vm);
-		vm.hasConditions = ko.dependentObservable(function(){return this.eventDriven() || this.stateDriven()},vm);
-
-		vm.conditionsMode = ko.dependentObservable({
-			read:function(){
-				if(! this.hasConditions()){
-					return "none";
-				}
-				if(this.isActive()){
-					return "state";
-				}
-				return "events";
-			},
-			write:function(val){
-				if(val !== 'events'){
-					vm.enter(undefined);
-					vm.exit(undefined);
-				} else{
-					vm.enter(createEventExpressionVM({on:{}}));
-					vm.exit(createEventExpressionVM({on:{}}))
-				}
-
-				if(val !== 'state'){
-					vm.isActive(undefined);
-				} else {
-					vm.isActive(createStateExpressionVM({whilst:{}}));
-				}
-			}
-		},vm);
-
-		vm.eventDrivenConditionsVM = ko.observable();	
-
-		vm.writeToModel = function writeToModel(model){
-			model.enter = vm.enter();
-			model.exit = vm.exit();
-			model.isActive = vm.isActive();
-		}
-		return vm;
-	}
-
-	var createStateVM = function createStateVM(stateConfig){
-		var stateVM = JSON.parse(JSON.stringify(stateConfig));
-		delete stateVM.sha;
-		var baselineJSON = JSON.stringify(stateVM);
-		stateVM.name = ko.observable(stateConfig.name);
-		stateVM.isEditing = ko.observable(false);
-
-		stateVM.edit = function edit(){stateVM.isEditing(true)};
-		stateVM.stopEditing = function stopEditing(){stateVM.isEditing(false)};		
-
-		stateVM.conditions = ko.observable(createStateConditionsVM(stateConfig));
-
-		stateVM.getModel = function getModel(){
-			var model = {
-				name:stateVM.name()
-			};
-			stateVM.conditions().writeToModel(model);
-			return model;
-		};
-
-		stateVM.isDirty = ko.dependentObservable(function(){
-			return JSON.stringify(this.getModel()) !== baselineJSON;
-		},stateVM);
-
-		return stateVM;
-	};
-
 	var originalConfig = JSON.parse( '{{ config|raw }}' );
-
-	var rootVM = {
-		states: ko.observableArray(originalConfig.states.map(createStateVM))
-	};
-
-	rootVM.getModel = function getModel(){
-		var model = {};
-		model.states = rootVM.states().map(function(state){return state.getModel()});
-		return model;
-	}
-
-	rootVM.currentConfigJSON = ko.computed(function(){
-		return JSON.stringify(this.getModel(),null,4);
-	},rootVM);
-
-	rootVM.hasUnsavedChanges = ko.dependentObservable(function(){
-		return this.states().filter(function(state){return state.isDirty()}).length > 0;
-	},rootVM);
-
-	rootVM.saveConfig = function saveConfig(){
-		var configToUpload = rootVM.currentConfigJSON();
-		var request = new XMLHttpRequest();
-		request.onreadystatechange = function(){
-			if(request.readyState === 4 && request.status >= 200 && request.status < 300){
-				rootVM.lastSaved(configToUpload)
-			}
-		};
-		request.open('POST', '/config/states');
-		request.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-		request.send(encodeURIComponent('configJSON') + '=' + encodeURIComponent(configToUpload));
-	}
-
-	rootVM.newStateName = ko.observable();
-	rootVM.addNewState = function addNewState(){
-		var newStateVm = createStateVM({name:rootVM.newStateName()});
-		newStateName.isEditing(true);
-		rootVM.states.push(newStateVm);
-		rootVM.newStateName("");
-	};
-
-	ko.applyBindings(rootVM);
 </script>
-
+<script type="text/javascript" src="/js/editStateConfig.js"></script>
 {% endblock %}

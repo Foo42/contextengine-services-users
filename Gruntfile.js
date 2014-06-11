@@ -4,6 +4,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-mocha-test');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-notify');
+  grunt.loadNpmTasks('grunt-mocha');
 
   grunt.initConfig({
     // Configure a mochaTest task
@@ -14,6 +15,14 @@ module.exports = function(grunt) {
         },
         src: ['test/**/*.js']
       }
+    },
+    mocha: {
+      test: {
+        src: ['test/client/mocha/**/*.html'],
+        options: {
+          run: true
+        }
+      },
     },
     watch: {
       scripts: {
