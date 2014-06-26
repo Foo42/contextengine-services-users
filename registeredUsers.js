@@ -38,5 +38,6 @@ module.exports = {
 		}
 	},
 
-	getAllRegisteredUsers: loadUsersFromFile
+	getAllRegisteredUsers: loadUsersFromFile,
+	getAllRegisteredUsers_: require('promise').denodeify(loadUsersFromFile)
 }
