@@ -52,54 +52,33 @@ module.exports = (function(){
 		);
 	};
 
-
-
 	module.createContextEnginesForRegisteredUsers = function(){
-		var engines = {};
-		
 		var createContextEnginePromise = Promise.denodeify(module.createContextEngine.bind(module));		
 		
-		var enginePromisesByUser = {};
+		var enginePromisesByUser = {};		
 		
-		
-		var createAllEngines = registeredUsersAccess.getAllRegisteredUsers_().then(function(users){
-			console.info('about to create engines for ' + users.length + ' users');	
-			
-			var enginePromisesList = [];
-
-			users.forEach(function(user){
+		var beginCreationOfEnginesForAllUsers = registeredUsersAccess.getAllRegisteredUsers_().then(function(users){
+			return users.map(function(user){
 				var enginePromise = enginePromisesByUser[user.id] = createContextEnginePromise(user);
-				enginePromisesList.push(enginePromise);
+				return enginePromise;
 			});
-
-			return Promise.all(enginePromisesList);
-		})
-		.then(console.log.bind(console, "Created all context engines"))
-		.catch(function(err){
-			console.error('Failed to create all context engines with error ' + err);
-			process.exit(1);
 		});
 
-		var getContextEngineForUser = function getContextEngineForUser(user, done){
-			console.log('getting context engine for user ' + user.id);
-			if(!user.id){
-				return console.trace('undefined user');
-			}
-			createAllEngines.then(function(){
-				console.log('all engines created......');
-				console.log('status of user engine promise: ');
-				console.dir(enginePromisesByUser);
-				enginePromisesByUser[user.id].then(done.bind(done,null)).catch(done);
+		beginCreationOfEnginesForAllUsers.then(Promise.all.bind(Promise))
+			.then(console.log.bind(console, "Created all context engines"))
+			.catch(function(err){
+				console.error('Failed to create all context engines with error ' + err);
+				process.exit(1);
+			});
+
+		var getContextEngineForUserPromise = function getContextEngineForUserPromise(user){			
+			return beginCreationOfEnginesForAllUsers.then(function(){
+				return enginePromisesByUser[user.id];
 			});
 		};
 
-		var getContextEngineForUserPromise = function getContextEngineForUserPromise(user){
-			return new Proj
-
-			if(!user.id){
-				return console.trace('undefined user');
-			}
-			return enginePromisesByUser[user.id].then(done.bind(done,null)).catch(done);			
+		var getContextEngineForUser = function getContextEngineForUser(user, done){
+			getContextEngineForUserPromise(user).then(done.bind(done,null)).catch(done);			
 		};
 
 		return {
