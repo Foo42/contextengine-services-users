@@ -35,31 +35,34 @@ var attachAllListeners = function attachAllListeners(contextEngine, done){
 module.exports = (function(){
 	var module = {};
 
-	module.createContextEngine = function(user, done){
-		var contextEngine = new module.ContextEngine();
-		contextEngine.user = user;
+	module.createContextEngine = function(user){
+		return new Promise(function(resolve, reject){
+			var contextEngine = new module.ContextEngine();
+			contextEngine.user = user;
 
-		async.waterfall(
-			[
-				function(callback){getValidDataPathForUser(user, callback);},
-				function(userDataPath, callback){
-					contextEngine.userDataPath = userDataPath;
-					callback(null,contextEngine);							
-				},
-				attachAllListeners
-			],
-			done
-		);
+			async.waterfall(
+				[
+					function(callback){getValidDataPathForUser(user, callback);},
+					function(userDataPath, callback){
+						contextEngine.userDataPath = userDataPath;
+						callback(null,contextEngine);							
+					},
+					attachAllListeners
+				],
+				function(err,engine){
+					if(err){return reject(err)}
+					return resolve(engine);
+				}
+			);
+		});
 	};
 
 	module.createContextEnginesForRegisteredUsers = function(){
-		var createContextEnginePromise = Promise.denodeify(module.createContextEngine.bind(module));		
-		
 		var enginePromisesByUser = {};		
 		
 		var beginCreationOfEnginesForAllUsers = registeredUsersAccess.getAllRegisteredUsers_().then(function(users){
 			return users.map(function(user){
-				var enginePromise = enginePromisesByUser[user.id] = createContextEnginePromise(user);
+				var enginePromise = enginePromisesByUser[user.id] = module.createContextEngine(user);
 				return enginePromise;
 			});
 		});
