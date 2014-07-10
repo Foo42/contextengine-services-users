@@ -12,16 +12,13 @@ module.exports = function(){
 			};
 
 			text.post = function(req, res){
-				req.user.getContextEngine(function(err, contextEngine){
-					if(err){
-						return res.send(500);
-					}
+				req.user.getContextEngine().then(function(contextEngine){
 					var event = {type:'text', text:req.body.eventText};
 
 					contextEngine.registerNewEvent(event, function(){
 						res.redirect('/events/recent');	
 					});	
-				});
+				}).catch(res.send.bind(res,500));
 			}
 
 			return text;
@@ -32,16 +29,12 @@ module.exports = function(){
 	})();
 
 	eventsModule.listRecent = function(req,res){
-		req.user.getContextEngine(function(err,contextEngine){
-			if(err){
-				return res.send(500);
-			}
-			
+		req.user.getContextEngine().then(function(contextEngine){
 			contextEngine.getRecentEvents(function(err, recentEvents){
 				var eventsVm = recentEvents.map(function(event){return {type:event.type, detail:(event.text || event.stateName)}})
 				res.render('events-list', {title:'Recent Events', events:eventsVm});
 			});
-		});
+		}).catch(res.send.bind(res,500));
 	}
 
 	return eventsModule;

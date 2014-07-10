@@ -8,17 +8,15 @@ var initialise = function(getContextEngineForUser){
 
 		ensureAuthenticated: function(req, res, next){
 			req.user = req.user || {id:'someone'};
-			
-			getContextEngineForUser(req.user, function(err, engine){
-				if(err){
-					console.log('error getting context engine for user');
-					return;
-				}
 
+			
+			getContextEngineForUser(req.user).then(function(engine){
 				req.user.getContextEngine = getContextEngineForUser.bind(getContextEngineForUser,req.user);
 				next();
+			}).catch(function(error){
+				console.log('error getting context engine for user');
+				next(error);
 			});
-
 			
 		},
 		ensureAdministrator: function(req, res, next){next()}
