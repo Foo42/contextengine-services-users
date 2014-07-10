@@ -74,19 +74,14 @@ module.exports = (function(){
 				process.exit(1);
 			});
 
-		var getContextEngineForUserPromise = function getContextEngineForUserPromise(user){			
+		var getContextEngineForUser = function getContextEngineForUser(user){			
 			return beginCreationOfEnginesForAllUsers.then(function(){
 				return enginePromisesByUser[user.id];
 			});
 		};
 
-		var getContextEngineForUser = function getContextEngineForUser(user, done){
-			getContextEngineForUserPromise(user).then(done.bind(done,null)).catch(done);			
-		};
-
 		return {
-			getContextEngineForUser:getContextEngineForUser,
-			getContextEngineForUserPromise: getContextEngineForUserPromise
+			getContextEngineForUser: getContextEngineForUser
 		}
 	}
 
