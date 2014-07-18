@@ -8,8 +8,9 @@ var registeredUsersAccess = require('../registeredUsers');
 var Promise = require('promise');
 
 var getValidDataPathForUser = function getValidDataPathForUser(user, done){
+	var baseUserDataPath = (process.env.USER_DATA_PATH || path.join(path.dirname(require.main.filename), 'data', 'userSpecific'));
+	var userDataPath = path.join(baseUserDataPath, user.id);
 	console.log('user.id ' + user.id);
-	var userDataPath = path.join(path.dirname(require.main.filename),'data','userSpecific', user.id);
 	mkdirp(userDataPath,function(err){
 		done(err, userDataPath);
 	});

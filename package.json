@@ -29,7 +29,9 @@
     "grunt-mocha-test": "~0.8.2",
     "proxyquire": "~0.5.2",
     "grunt-contrib-qunit": "~0.3.0",
-    "grunt-mocha": "~0.4.11"
+    "grunt-mocha": "~0.4.11",
+    "request": "~2.16.6",
+    "cheerio": "0.12.3"
   },
   "scripts": {
     "test": "grunt test"

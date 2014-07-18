@@ -7,7 +7,9 @@ var _ = require('lodash');
 
 module.exports = {
 	forUser:function(user){
-		var userDataPath = path.join(path.dirname(require.main.filename),'data','userSpecific', user.id);
+		var baseUserDataPath = (process.env.USER_DATA_PATH || path.join(path.dirname(require.main.filename), 'data', 'userSpecific'));
+		var userDataPath = path.join(baseUserDataPath, user.id);
+		console.log('user data path = ' + userDataPath);
 		var userConfigPath = path.join(userDataPath, 'config');
 		var stateConfigPath = path.join(userConfigPath, 'stateConfig.json');
 		

@@ -54,6 +54,4 @@ app.get('/states/active', authentication.ensureAuthenticated, states.listActive)
 app.get('/config/states', authentication.ensureAuthenticated, config.getStateConfig);
 app.post('/config/states', authentication.ensureAuthenticated, config.setStateConfig);
 
-http.createServer(app).listen(app.get('port'), function(){
-  console.log('Express server listening on port ' + app.get('port'));
-});
+module.exports = app;
