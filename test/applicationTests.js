@@ -51,8 +51,7 @@ describe.only('application', function () {
 			}, function (err, response, body) {
 				assert.ifError(err);
 				var $ = cheerio.load(body);
-				//$.()
-
+				assert.equal($('li').text(), 'type: text detail:testing');
 			});
 			done();
 		});
