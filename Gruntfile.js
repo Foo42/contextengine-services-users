@@ -1,4 +1,4 @@
-module.exports = function(grunt) {
+module.exports = function (grunt) {
 
   // Add the grunt-mocha-test tasks.
   grunt.loadNpmTasks('grunt-mocha-test');
@@ -33,6 +33,6 @@ module.exports = function(grunt) {
   });
 
   grunt.registerTask('quickFeedback', ['mochaTest']);
-  grunt.registerTask('default', ['quickFeedback', 'watch']);
+  grunt.registerTask('default', ['quickFeedback']);
 
 };
