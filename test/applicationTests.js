@@ -5,7 +5,7 @@ var path = require('path');
 var cheerio = require('cheerio');
 var fork = require('child_process').fork;
 
-describe.only('application', function () {
+describe('application', function () {
 	var app;
 	var server;
 	var host = 'http://localhost:9005';
