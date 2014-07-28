@@ -9,11 +9,17 @@ module.exports = function (grunt) {
   grunt.initConfig({
     // Configure a mochaTest task
     mochaTest: {
-      test: {
+      unit: {
         options: {
           reporter: 'spec'
         },
-        src: ['test/**/*.js']
+        src: ['test/server/unit/**/*.js']
+      },
+      smoke: {
+        options: {
+          reporter: 'spec'
+        },
+        src: ['test/smoke/**/*.js']
       }
     },
     mocha: {
@@ -32,6 +38,7 @@ module.exports = function (grunt) {
     },
   });
 
+  grunt.registerTask('unitTest', ['mochaTest:unit']);
   grunt.registerTask('quickFeedback', ['mochaTest']);
   grunt.registerTask('default', ['quickFeedback']);
 

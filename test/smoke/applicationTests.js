@@ -14,7 +14,7 @@ describe('application', function () {
 	beforeEach(function (done) {
 		var childEnv = {};
 		childEnv.OFFLINE_MODE = true;
-		childEnv.USER_DATA_PATH = path.join(__dirname, '../data/userSpecific');
+		childEnv.USER_DATA_PATH = path.join(__dirname, '../../data/userSpecific');
 		child = fork('./index.js', {
 			env: childEnv,
 			silent: true
