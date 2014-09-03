@@ -27,11 +27,9 @@ describe('fileAppendingEventListener', function () {
 				'mkdirp': stub_mkdirp
 			});
 
-			var stubContextEngine = {
-				userDataPath: "/foo/bar"
-			}
+			var stubContextEngine = {}
 
-			var listener = new fileAppendingEventListener.FileAppendingEventListener(stubContextEngine);
+			var listener = new fileAppendingEventListener.FileAppendingEventListener('/foo/bar');
 			listener.persistEvent(eventToSend);
 		})
 	});
