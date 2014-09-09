@@ -181,7 +181,7 @@ describe('Context expressions', function () {
 					done();
 				});
 
-				eventBus.emit('event created', {
+				eventBus.emit('context event', {
 					text: 'foo'
 				});
 			});
@@ -205,21 +205,21 @@ describe('Context expressions', function () {
 					}
 				});
 
-				eventBus.emit('event', {
+				eventBus.emit('context event', {
 					text: 'foo'
 				});
 
 				expression.startWatch();
 				shouldBeRaisingEvents = true;
 
-				eventBus.emit('event', {
+				eventBus.emit('context event', {
 					text: 'foo'
 				});
 
 				expression.stopWatch();
 				shouldBeRaisingEvents = false;
 
-				eventBus.emit('event', {
+				eventBus.emit('context event', {
 					text: 'foo'
 				});
 
@@ -295,7 +295,7 @@ describe('Context expressions', function () {
 					done();
 				});
 
-				eventBus.emit('event created', {
+				eventBus.emit('context event', {
 					text: 'foo'
 				});
 			});
@@ -324,7 +324,7 @@ describe('Context expressions', function () {
 					assert.fail();
 				});
 
-				eventBus.emit('event', {
+				eventBus.emit('context event', {
 					text: 'foo'
 				});
 			});

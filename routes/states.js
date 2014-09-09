@@ -1,11 +1,21 @@
-module.exports = function(){
+var finiteStateDirectQueryService = require('../core/State').finiteStateDirectQueryService;
+
+module.exports = function () {
 	var stateRoutes = {};
-	
-	stateRoutes.listActive = function(req,res){
-		req.user.getContextEngine().then(function(contextEngine){
-			var activeStates = contextEngine.states.getActiveStates();
-			res.render('active-states', {title:'Active States', activeStates:activeStates});			
-		}).catch(res.send.bind(res,500));
+
+	stateRoutes.listActive = function (req, res) {
+		finiteStateDirectQueryService.getStatesForUser(req.user.id, function (err, states) {
+			if (err) {
+				return res.send(500);
+			}
+			var activeStates = states.filter(function (state) {
+				return state.isActive
+			});
+			res.render('active-states', {
+				title: 'Active States',
+				activeStates: activeStates
+			});
+		});
 	}
 
 	return stateRoutes;

@@ -5,6 +5,7 @@ var path = require('path');
 var mkdirp = require('mkdirp');
 var async = require('async');
 var registeredUsersAccess = require('../registeredUsers');
+var userConfigurationAccess = require('./userConfigurationAccess');
 var Promise = require('promise');
 
 var getValidDataPathForUser = function getValidDataPathForUser(user, done) {
@@ -22,8 +23,14 @@ var attachAllListeners = function attachAllListeners(contextEngine, done) {
 		require('./State').StateInferenceEngine
 	];
 
+	var userConfig = userConfigurationAccess.forUser(contextEngine.user);
+
 	var contextEventBusReader = new EventEmitter();
 	contextEngine.on('event created', contextEventBusReader.emit.bind(contextEventBusReader, 'context event'));
+
+	var contextEventBusWriter = {
+		registerNewEvent: contextEngine.registerNewEvent.bind(contextEngine)
+	}
 
 	async.parallel(
 		[
@@ -32,7 +39,7 @@ var attachAllListeners = function attachAllListeners(contextEngine, done) {
 				fileAppendingEventListener.subscribeToContextEvents(contextEventBusReader, contextEngine.userDataPath, done);
 			},
 			function (done) {
-				require('./State').StateInferenceEngine.subscribeToContextEvents(contextEngine, done);
+				require('./State').StateInferenceEngine.subscribeToContextEvents(contextEngine.user, contextEventBusReader, contextEventBusWriter, userConfig, done);
 			}
 		], function (err) {
 			done(err, contextEngine);
