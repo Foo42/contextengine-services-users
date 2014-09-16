@@ -1,3 +1,5 @@
+var getContextEventBusWriter = require('../core/contextEventBusWriter');
+
 module.exports = function () {
 	var eventsModule = {};
 
@@ -14,16 +16,14 @@ module.exports = function () {
 			};
 
 			text.post = function (req, res) {
-				req.user.getContextEngine().then(function (contextEngine) {
-					var event = {
-						type: 'text',
-						text: req.body.eventText
-					};
-					contextEngine._temp_contextEventBusWriter.registerNewEvent(event);
-					setTimeout(function () {
-						res.redirect('/events/recent');
-					}, 100);
-				}).catch(res.send.bind(res, 500));
+				var event = {
+					type: 'text',
+					text: req.body.eventText
+				};
+				getContextEventBusWriter(req.user.id).registerNewEvent(event);
+				setTimeout(function () {
+					res.redirect('/events/recent');
+				}, 100);
 			}
 
 			return text;

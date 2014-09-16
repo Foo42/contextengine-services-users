@@ -8,7 +8,7 @@ var registeredUsersAccess = require('../registeredUsers');
 var userConfigurationAccess = require('./userConfigurationAccess');
 var Promise = require('promise');
 var getConnectedContextEventBusWriter = require('./contextEventBusWriter');
-require('./contextEventBusReader')(1234);
+var getContextEventBusReader = require('./contextEventBusReader');
 
 var getValidDataPathForUser = function getValidDataPathForUser(user, done) {
 	var baseUserDataPath = (process.env.USER_DATA_PATH || path.join(path.dirname(require.main.filename), 'data', 'userSpecific'));
@@ -27,35 +27,22 @@ var attachAllListeners = function attachAllListeners(contextEngine, done) {
 
 	var userConfig = userConfigurationAccess.forUser(contextEngine.user);
 
-	//old school based reader
-	var contextEventBusReader = new EventEmitter();
-	contextEngine.on('event created', contextEventBusReader.emit.bind(contextEventBusReader, 'context event'));
+	var contextEventBusWriter = getConnectedContextEventBusWriter(contextEngine.user.id);
 
-	//writes dually to old and new systems while refactoring
-	var contextEventBusWriter = {
-		registerNewEvent: function (contextEvent) {
-			console.log('registering new event with hybrid contextEventBusWriter');
-			getConnectedContextEventBusWriter(contextEngine.user.id).registerNewEvent(contextEvent);
-		}
-	};
+	getContextEventBusReader(contextEngine.user.id).then(function (contextEventBusReader) {
+		async.parallel(
+			[
 
-	//Allows the web app to create context events which are seen by subscribers before we join the dots
-	// to have the reader read from the rabbitmq such that were not relient on them accessing the same
-	// event emitter.
-	contextEngine._temp_contextEventBusWriter = contextEventBusWriter;
-
-	async.parallel(
-		[
-
-			function (done) {
-				fileAppendingEventListener.subscribeToContextEvents(contextEventBusReader, contextEngine.userDataPath, done);
-			},
-			function (done) {
-				require('./State').StateInferenceEngine.subscribeToContextEvents(contextEngine.user, contextEventBusReader, contextEventBusWriter, userConfig, done);
-			}
-		], function (err) {
-			done(err, contextEngine);
-		})
+				function (done) {
+					fileAppendingEventListener.subscribeToContextEvents(contextEventBusReader, contextEngine.userDataPath, done);
+				},
+				function (done) {
+					require('./State').StateInferenceEngine.subscribeToContextEvents(contextEngine.user, contextEventBusReader, contextEventBusWriter, userConfig, done);
+				}
+			], function (err) {
+				done(err, contextEngine);
+			});
+	});
 }
 
 module.exports = (function () {

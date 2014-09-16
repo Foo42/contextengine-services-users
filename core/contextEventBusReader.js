@@ -41,6 +41,7 @@ bindListenerQueue = setupExchange.then(function (exchange) {
 	console.log('listener exchange connect');
 	return new Promise(function (resolveListenerQueue) {
 		makingConnection.then(function (connection) {
+			console.log('got connection to rabbitMQ reader');
 			connection.queue('tmp-' + Math.random(), {
 					exclusive: true
 				},
@@ -57,17 +58,31 @@ bindListenerQueue = setupExchange.then(function (exchange) {
 
 
 ///Need to store one per user n stuff
+readers = {};
 
 module.exports = function (userId) {
 	console.log('in listener queue exports');
 	return bindListenerQueue.then(function (queue) {
-		console.log('listener queue bound');
+		if (readers[userId]) {
+			console.log('reaturning previously created rabbitMQ conext event listener for ' + userId);
+			return readers[userId];
+		}
+		console.log('creating rabbitMQ context event listener for ' + userId);
 		var emitter = new EventEmitter();
+		readers[userId] = emitter;
 		queue.subscribe(function (msg) {
-			emitter.emit('dfsfsaf', msg.data.toString('utf-8'));
+			var eventAsObj;
+			try {
+				var eventAsObj = JSON.parse(msg.data.toString('utf-8'));
+			} catch (e) {
+				console.error('error parsing contextEvent coming off queue ' + e);
+			}
+			if (!eventAsObj) {
+				return;
+			}
+			emitter.emit('context event', eventAsObj);
 			console.log(msg.data.toString('utf-8'));
 		});
-		console.log('subscribed to queue');
 		return emitter;
 	});
 };
