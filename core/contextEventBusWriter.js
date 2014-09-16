@@ -1,42 +1,50 @@
 var amqp = require('amqp');
 var Promise = require('promise');
 
-function getConnection(config) {
-	var connection = amqp.createConnection({
-		host: config.rabbitmqHost,
-		login: config.rabbitmqUser || 'guest',
-		password: config.rabbitmqPassword || 'guest'
-	});
-	return new Promise(function (resolve, reject) {
-		connection.on('ready', resolve.bind(null, connection));
-	});
-}
-
+var connectionSettings = {
+	host: process.env.RABBITMQ_HOST || '192.168.59.103',
+	login: 'admin',
+	password: 'aXo0o4BrUyUq'
+};
 
 var exchangeSettings = {
 	type: 'fanout',
 	autoDelete: false
 };
 
+var exchange;
 
-function declareExchange() {
-	var createExchange = Promise.denodify(connection.exchange.bind(connection));
-	return createExchange('contextEvents', exchangeSettings);
+
+function beginConnecting() {
+	return new Promise(function (resolve, reject) {
+		var connection = amqp.createConnection(connectionSettings);
+		connection.once('ready', resolve.bind(null, connection));
+	});
+}
+
+function declareExchange(connection) {
+	return new Promise(function (resolve, reject) {
+		connection.exchange('contextEvents', {
+			type: 'fanout',
+			autoDelete: false
+		}, resolve.bind(null))
+	});
 }
 
 
-module.exports = {
-	//should we require config be supplied each time this is required in? mind you, if we are using di, then that should only be once!
-	create: function (config) {
-		return getConnection(config)
-			.then(declareExchange)
-			.then(function (contextEventExchange) {
-				var contextEventBusWriter = {
-					write: function (contextEvent) {
-						contextEventExchange.publish('', contextEvent);
-					}
-				};
-				return contextEventBusWriter;
+var setupExchange = beginConnecting().then(declareExchange);
+
+module.exports = function (userId) {
+	return {
+		registerNewEvent: function registerNewEvent(contextEvent) {
+			contextEvent.userId = userId;
+			setupExchange.then(function (exchange) {
+				console.log('writer ready to roll');
+				console.log('writer publishing to bus');
+				exchange.publish('', JSON.stringify(contextEvent));
+			}).catch(function (err) {
+				console.error('error accessing contextEvent bus writer queue ' + err)
 			});
-	}
-}
+		}
+	};
+};

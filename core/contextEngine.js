@@ -7,6 +7,8 @@ var async = require('async');
 var registeredUsersAccess = require('../registeredUsers');
 var userConfigurationAccess = require('./userConfigurationAccess');
 var Promise = require('promise');
+var getConnectedContextEventBusWriter = require('./contextEventBusWriter');
+require('./contextEventBusReader')(1234);
 
 var getValidDataPathForUser = function getValidDataPathForUser(user, done) {
 	var baseUserDataPath = (process.env.USER_DATA_PATH || path.join(path.dirname(require.main.filename), 'data', 'userSpecific'));
@@ -25,12 +27,22 @@ var attachAllListeners = function attachAllListeners(contextEngine, done) {
 
 	var userConfig = userConfigurationAccess.forUser(contextEngine.user);
 
+	//old school based reader
 	var contextEventBusReader = new EventEmitter();
 	contextEngine.on('event created', contextEventBusReader.emit.bind(contextEventBusReader, 'context event'));
 
+	//writes dually to old and new systems while refactoring
 	var contextEventBusWriter = {
-		registerNewEvent: contextEngine.registerNewEvent.bind(contextEngine)
-	}
+		registerNewEvent: function (contextEvent) {
+			console.log('registering new event with hybrid contextEventBusWriter');
+			getConnectedContextEventBusWriter(contextEngine.user.id).registerNewEvent(contextEvent);
+		}
+	};
+
+	//Allows the web app to create context events which are seen by subscribers before we join the dots
+	// to have the reader read from the rabbitmq such that were not relient on them accessing the same
+	// event emitter.
+	contextEngine._temp_contextEventBusWriter = contextEventBusWriter;
 
 	async.parallel(
 		[
