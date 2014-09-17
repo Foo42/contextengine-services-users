@@ -69,6 +69,7 @@ module.exports = function (userId) {
 		}
 		console.log('creating rabbitMQ context event listener for ' + userId);
 		var emitter = new EventEmitter();
+		emitter.userId = userId;
 		readers[userId] = emitter;
 		queue.subscribe(function (msg) {
 			var eventAsObj;
@@ -83,6 +84,7 @@ module.exports = function (userId) {
 			emitter.emit('context event', eventAsObj);
 			console.log(msg.data.toString('utf-8'));
 		});
+		console.log('returning emitter for user', userId, 'with userId property of', emitter.userId);
 		return emitter;
 	});
 };
