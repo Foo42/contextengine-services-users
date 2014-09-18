@@ -34,20 +34,28 @@ module.exports = function () {
 	})();
 
 	eventsModule.listRecent = function (req, res) {
-		req.user.getContextEngine().then(function (contextEngine) {
-			contextEngine.getRecentEvents(function (err, recentEvents) {
+		gettingEvents = require('../services/historicalEventService/client').getRecentEventsForUser(req.user.id);
+		setTimeout(function () {
+			console.log('getting events from recentEvents service');
+			gettingEvents.then(function (recentEvents) {
+				console.log('got events from recentEvents service');
 				var eventsVm = recentEvents.map(function (event) {
 					return {
 						type: event.type,
 						detail: (event.text || event.stateName)
 					}
-				})
+				});
+				console.log('returning recent events: ' + JSON.stringify(eventsVm));
 				res.render('events-list', {
 					title: 'Recent Events',
 					events: eventsVm
 				});
+			}).catch(function (err) {
+				console.error('problem getting recent events ' + err);
+				res.send(500);
 			});
-		}).catch(res.send.bind(res, 500));
+		}, 500);
+
 	}
 
 	return eventsModule;

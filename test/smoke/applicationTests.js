@@ -23,7 +23,6 @@ describe('application', function () {
 		setTimeout(done, 500);
 	});
 
-
 	function assertIsRedirectTo(response, path) {
 		assert.equal(response.statusCode, 302);
 		assert.equal(response.headers['location'], '/events/recent')
@@ -31,8 +30,19 @@ describe('application', function () {
 
 	afterEach(function (done) {
 		setTimeout(function () {
+			console.log('about to kill child after test...');
+			child.once('close', function (code) {
+				console.log('child closed with code ' + code)
+				done();
+			});
+
+			child.once('exit', function (code) {
+				console.log('child exited with code ' + code)
+				done();
+			});
+
 			child.kill();
-			done();
+			console.log('sent kill, waiting for child to die');
 		}, 100);
 	});
 
@@ -51,9 +61,9 @@ describe('application', function () {
 			}, function (err, response, body) {
 				assert.ifError(err);
 				var $ = cheerio.load(body);
-				assert.equal($('li').text(), 'type: text detail:testing');
+				assert.equal($('li').first().text(), 'type: text detail:testing');
+				done();
 			});
-			done();
 		});
 	});
 

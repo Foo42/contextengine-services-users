@@ -14,6 +14,8 @@ app.use(express.bodyParser());
 app.use(express.methodOverride());
 app.use(app.router);
 
+var recentEvents = {};
+
 app.get('/events/recent', function (request, response) {
 	var userId = request.param('userid');
 	console.log(userId);
@@ -21,12 +23,15 @@ app.get('/events/recent', function (request, response) {
 		return response.status(400).end();
 	}
 
-	eventBusListener(userId).then()
+	response.send(JSON.stringify(recentEvents[userId]));
 });
+
 
 function processIncomingContextEvent(event) {
 	log('recieved context event ' + JSON.stringify(event));
+	recentEvents[event.userId].push(event);
 }
+
 
 http.createServer(app).listen(app.get('port'), function () {
 	log('server listening on port ' + app.get('port'));
@@ -39,6 +44,7 @@ http.createServer(app).listen(app.get('port'), function () {
 			log('waiting for context event listener promise to resolve')
 			contextEventEmitterPromise.then(function (contextEventEmitter) {
 				log('subscribing to context events from ', contextEventEmitter.userId);
+				recentEvents[contextEventEmitter.userId] = [];
 				contextEventEmitter.on('context event', processIncomingContextEvent);
 			});
 		});
