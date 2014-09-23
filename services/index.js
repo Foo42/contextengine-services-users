@@ -20,6 +20,22 @@ function startHistoricalEventService() {
     });
 }
 
+function startLegacyContextEngine() {
+    var fullPath = require.resolve('./legacyContextEngine');
+    return new Promise(function (resolve, reject) {
+        var legacyContextEngine = fork(fullPath, {
+            silent: false
+        });
+
+        legacyContextEngine.on('message', function (msg) {
+            console.log('recieved message from legacyContextEngine, assuming ready');
+            resolve();
+        });
+        childProcesses.push(legacyContextEngine);
+        process.on('exit', legacyContextEngine.kill.bind(legacyContextEngine));
+    });
+}
+
 function cleanUpChildProcesses() {
     console.log('recieved signal - terminating child processes');
     childProcesses.forEach(function (child) {
@@ -31,5 +47,10 @@ function cleanUpChildProcesses() {
 module.exports.bootstrapServices = function () {
     process.on('SIGINT', cleanUpChildProcesses);
     process.on('SIGTERM', cleanUpChildProcesses);
-    return startHistoricalEventService();
+    return Promise.all(
+        [
+            startHistoricalEventService(),
+            startLegacyContextEngine()
+        ]
+    );
 }
