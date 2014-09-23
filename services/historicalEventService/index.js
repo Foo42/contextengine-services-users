@@ -1,9 +1,12 @@
+console.log('HistorialEventService starting...');
 var http = require('http');
 var express = require('express');
 var getEventBusListener = require('../../core/contextEventBusReader');
 var registeredUsersAccess = require('../../registeredUsers');
+var Promise = require('promise');
 
 var log = console.log.bind(console, 'HistorialEventService:');
+process.once('exit', log.bind(null, 'recieved exit event'));
 
 var app = express();
 
@@ -38,9 +41,11 @@ http.createServer(app).listen(app.get('port'), function () {
 	log('loading registered users');
 	registeredUsersAccess.getAllRegisteredUsers_().then(function (users) {
 		log('got registered users');
-		users.map(function (user) {
+		var gettingBusAccessForEachUser = users.map(function (user) {
 			return user.id
-		}).map(getEventBusListener).forEach(function (contextEventEmitterPromise) {
+		}).map(getEventBusListener);
+
+		gettingBusAccessForEachUser.forEach(function (contextEventEmitterPromise) {
 			log('waiting for context event listener promise to resolve')
 			contextEventEmitterPromise.then(function (contextEventEmitter) {
 				log('subscribing to context events from ', contextEventEmitter.userId);
@@ -48,5 +53,10 @@ http.createServer(app).listen(app.get('port'), function () {
 				contextEventEmitter.on('context event', processIncomingContextEvent);
 			});
 		});
+
+		Promise.all(gettingBusAccessForEachUser).then(function () {
+			log('announcing ready');
+			process.send('{"status":"ready"}');
+		})
 	});
 });

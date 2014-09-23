@@ -17,10 +17,18 @@ describe('application', function () {
 		childEnv.USER_DATA_PATH = path.join(__dirname, '../../data/userSpecific');
 		child = fork('./index.js', {
 			env: childEnv,
-			silent: true
+			silent: false
 		});
-		child.disconnect(); //dont need the ipc channel
-		setTimeout(done, 500);
+		child.on('message', function (msg) {
+			try {
+				if (JSON.parse(msg).status === 'ready') {
+					console.log('recieved ready message from child process (SUT)');
+					return done();
+				}
+			} catch (e) {
+				console.warn('recieved non json msg from child', msg);
+			}
+		});
 	});
 
 	function assertIsRedirectTo(response, path) {
@@ -31,10 +39,10 @@ describe('application', function () {
 	afterEach(function (done) {
 		setTimeout(function () {
 			console.log('about to kill child after test...');
-			child.once('close', function (code) {
-				console.log('child closed with code ' + code)
-				done();
-			});
+			// child.once('close', function (code) {
+			// 	console.log('child closed with code ' + code)
+			// 	done();
+			// });
 
 			child.once('exit', function (code) {
 				console.log('child exited with code ' + code)
@@ -61,6 +69,7 @@ describe('application', function () {
 			}, function (err, response, body) {
 				assert.ifError(err);
 				var $ = cheerio.load(body);
+				console.log('li first = ' + $('li').first().text());
 				assert.equal($('li').first().text(), 'type: text detail:testing');
 				done();
 			});
