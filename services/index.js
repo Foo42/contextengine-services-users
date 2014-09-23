@@ -3,36 +3,19 @@ var fork = require('child_process').fork;
 
 var childProcesses = [];
 
-function startHistoricalEventService() {
-    var fullPath = require.resolve('./historicalEventService');
+function startService(path) {
+    var fullPath = require.resolve(path);
     return new Promise(function (resolve, reject) {
-        var historicalEventService = fork(fullPath, {
+        var service = fork(fullPath, {
             silent: false
         });
-        historicalEventService.on('message', function (msg) {
+        service.on('message', function (msg) {
             console.log('recieved message from historicalEventService, assuming ready');
             //assume ready message
             resolve();
         })
-        childProcesses.push(historicalEventService);
-        process.on('exit', historicalEventService.kill.bind(historicalEventService));
-        // setTimeout(resolve, 200); //Arbitrary delay at the moment
-    });
-}
-
-function startLegacyContextEngine() {
-    var fullPath = require.resolve('./legacyContextEngine');
-    return new Promise(function (resolve, reject) {
-        var legacyContextEngine = fork(fullPath, {
-            silent: false
-        });
-
-        legacyContextEngine.on('message', function (msg) {
-            console.log('recieved message from legacyContextEngine, assuming ready');
-            resolve();
-        });
-        childProcesses.push(legacyContextEngine);
-        process.on('exit', legacyContextEngine.kill.bind(legacyContextEngine));
+        childProcesses.push(service);
+        process.on('exit', service.kill.bind(service));
     });
 }
 
@@ -49,8 +32,9 @@ module.exports.bootstrapServices = function () {
     process.on('SIGTERM', cleanUpChildProcesses);
     return Promise.all(
         [
-            startHistoricalEventService(),
-            startLegacyContextEngine()
+            startService('./historicalEventService'),
+            startService('./legacyContextEngine'),
+            startService('./webFrontEnd')
         ]
     );
 }
