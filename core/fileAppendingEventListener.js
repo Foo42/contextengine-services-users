@@ -5,9 +5,9 @@ var path = require('path');
 module.exports = (function () {
 	var module = {};
 
-	module.subscribeToContextEvents = function (contextEngine, userDataPath, done) {
+	module.subscribeToContextEvents = function (contextEventBusReader, userDataPath, done) {
 		var listener = new module.FileAppendingEventListener(userDataPath);
-		contextEngine.on('context event', listener.persistEvent);
+		contextEventBusReader.on('context event', listener.persistEvent);
 		return done(null);
 	}
 
