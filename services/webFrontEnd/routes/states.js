@@ -1,4 +1,4 @@
-var finiteStateDirectQueryService = require('../core/State').finiteStateDirectQueryService;
+var finiteStateDirectQueryService = require('../../../core/State').finiteStateDirectQueryService;
 
 module.exports = function () {
 	var stateRoutes = {};

@@ -1,4 +1,5 @@
-var getContextEventBusWriter = require('../core/contextEventBusWriter');
+var getContextEventBusWriter = require('../../../core/contextEventBusWriter');
+var historicalEventService = require('../../historicalEventService/client');
 
 module.exports = function () {
 	var eventsModule = {};
@@ -34,7 +35,7 @@ module.exports = function () {
 	})();
 
 	eventsModule.listRecent = function (req, res) {
-		gettingEvents = require('../services/historicalEventService/client').getRecentEventsForUser(req.user.id);
+		gettingEvents = historicalEventService.getRecentEventsForUser(req.user.id);
 		setTimeout(function () {
 			console.log('getting events from recentEvents service');
 			gettingEvents.then(function (recentEvents) {
