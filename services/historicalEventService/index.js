@@ -4,6 +4,8 @@ var express = require('express');
 var getEventBusListener = require('../../core/contextEventBusReader');
 var registeredUsersAccess = require('../../registeredUsers');
 var Promise = require('promise');
+var path = require('path');
+var fs = require('fs');
 
 var log = console.log.bind(console, 'HistorialEventService:');
 process.once('exit', log.bind(null, 'recieved exit event'));
@@ -30,10 +32,33 @@ app.get('/events/recent', function (request, response) {
 });
 
 
+function persistEvent(event) {
+	log('persisting event to disk');
+	var lineToAppend = JSON.stringify(event) + '\n';
+	var userDataPath = path.join(baseUserDataPath, event.userId);
+	var fileName = path.join(userDataPath, 'eventLog.txt');
+	log('appending event to', fileName);
+	fs.appendFile(fileName, lineToAppend, function (err) {
+		if (err) {
+			console.error('error appending event to', fileName);
+			console.error(err)
+			throw err;
+		} else {
+			log('successfully written event to', fileName);
+		}
+	});
+}
+
 function processIncomingContextEvent(event) {
 	log('recieved context event ' + JSON.stringify(event));
 	recentEvents[event.userId].push(event);
+	log('stored event in memory');
+	persistEvent(event);
+	log('initiated persist to disk');
 }
+
+var baseUserDataPath = (process.env.USER_DATA_PATH || path.join(path.dirname(require.main.filename), 'data', 'userSpecific'));
+
 
 
 http.createServer(app).listen(app.get('port'), function () {

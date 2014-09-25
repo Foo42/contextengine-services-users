@@ -33,9 +33,9 @@ var attachAllListeners = function attachAllListeners(contextEngine, done) {
 		async.parallel(
 			[
 
-				function (done) {
-					fileAppendingEventListener.subscribeToContextEvents(contextEventBusReader, contextEngine.userDataPath, done);
-				},
+		// function (done) {
+		// 	fileAppendingEventListener.subscribeToContextEvents(contextEventBusReader, contextEngine.userDataPath, done);
+		// },
 				function (done) {
 					require('./State').StateInferenceEngine.subscribeToContextEvents(contextEngine.user, contextEventBusReader, contextEventBusWriter, userConfig, done);
 				}
