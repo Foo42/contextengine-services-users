@@ -6,6 +6,7 @@ var registeredUsersAccess = require('../../registeredUsers');
 var Promise = require('promise');
 var path = require('path');
 var fs = require('fs');
+var persistEvent = require('./lib/eventPersistance').persistEvent;
 
 var log = console.log.bind(console, 'HistorialEventService:');
 process.once('exit', log.bind(null, 'recieved exit event'));
@@ -31,24 +32,6 @@ app.get('/events/recent', function (request, response) {
 	response.send(JSON.stringify(recentEvents[userId]));
 });
 
-
-function persistEvent(event) {
-	log('persisting event to disk');
-	var lineToAppend = JSON.stringify(event) + '\n';
-	var userDataPath = path.join(baseUserDataPath, event.userId);
-	var fileName = path.join(userDataPath, 'eventLog.txt');
-	log('appending event to', fileName);
-	fs.appendFile(fileName, lineToAppend, function (err) {
-		if (err) {
-			console.error('error appending event to', fileName);
-			console.error(err)
-			throw err;
-		} else {
-			log('successfully written event to', fileName);
-		}
-	});
-}
-
 function processIncomingContextEvent(event) {
 	log('recieved context event ' + JSON.stringify(event));
 	recentEvents[event.userId].push(event);
@@ -59,16 +42,15 @@ function processIncomingContextEvent(event) {
 
 var baseUserDataPath = (process.env.USER_DATA_PATH || path.join(path.dirname(require.main.filename), 'data', 'userSpecific'));
 
-
-
 http.createServer(app).listen(app.get('port'), function () {
 	log('server listening on port ' + app.get('port'));
 	log('loading registered users');
 	registeredUsersAccess.getAllRegisteredUsers_().then(function (users) {
 		log('got registered users');
-		var gettingBusAccessForEachUser = users.map(function (user) {
-			return user.id
-		}).map(getEventBusListener);
+		var gettingBusAccessForEachUser = users
+			.map(function (user) {
+				return user.id
+			}).map(getEventBusListener);
 
 		gettingBusAccessForEachUser.forEach(function (contextEventEmitterPromise) {
 			log('waiting for context event listener promise to resolve')
@@ -76,6 +58,8 @@ http.createServer(app).listen(app.get('port'), function () {
 				log('subscribing to context events from ', contextEventEmitter.userId);
 				recentEvents[contextEventEmitter.userId] = [];
 				contextEventEmitter.on('context event', processIncomingContextEvent);
+			}).catch(function (err) {
+				console.error('Error getting context bus access for user', err);
 			});
 		});
 

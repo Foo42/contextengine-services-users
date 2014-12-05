@@ -12,7 +12,7 @@ describe('application', function () {
 	var child;
 
 	beforeEach(function (done) {
-		this.timeout(4000);
+		this.timeout(8000);
 		var childEnv = {};
 		childEnv.OFFLINE_MODE = true;
 		childEnv.USER_DATA_PATH = path.join(__dirname, '../../data/userSpecific');

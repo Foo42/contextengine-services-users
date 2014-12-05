@@ -10,15 +10,6 @@ var Promise = require('promise');
 var getConnectedContextEventBusWriter = require('./contextEventBusWriter');
 var getContextEventBusReader = require('./contextEventBusReader');
 
-var getValidDataPathForUser = function getValidDataPathForUser(user, done) {
-	var baseUserDataPath = (process.env.USER_DATA_PATH || path.join(path.dirname(require.main.filename), 'data', 'userSpecific'));
-	var userDataPath = path.join(baseUserDataPath, user.id);
-	console.log('user.id ' + user.id);
-	mkdirp(userDataPath, function (err) {
-		done(err, userDataPath);
-	});
-}
-
 var attachAllListeners = function attachAllListeners(contextEngine, done) {
 	var listeners = [
 		fileAppendingEventListener,
@@ -33,9 +24,6 @@ var attachAllListeners = function attachAllListeners(contextEngine, done) {
 		async.parallel(
 			[
 
-		// function (done) {
-		// 	fileAppendingEventListener.subscribeToContextEvents(contextEventBusReader, contextEngine.userDataPath, done);
-		// },
 				function (done) {
 					require('./State').StateInferenceEngine.subscribeToContextEvents(contextEngine.user, contextEventBusReader, contextEventBusWriter, userConfig, done);
 				}
@@ -57,10 +45,6 @@ module.exports = (function () {
 				[
 
 					function (callback) {
-						getValidDataPathForUser(user, callback);
-					},
-					function (userDataPath, callback) {
-						contextEngine.userDataPath = userDataPath;
 						callback(null, contextEngine);
 					},
 					attachAllListeners

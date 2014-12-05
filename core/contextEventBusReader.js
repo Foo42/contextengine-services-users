@@ -8,7 +8,7 @@ var Promise = require('promise');
 var connectionSettings = {
 	host: process.env.RABBITMQ_HOST || '192.168.59.103',
 	login: 'admin',
-	password: 'aXo0o4BrUyUq'
+	password: 'admin'
 };
 
 var exchangeSettings = {
@@ -17,7 +17,6 @@ var exchangeSettings = {
 };
 
 var exchange;
-
 
 function beginConnecting() {
 	return new Promise(function (resolve, reject) {
@@ -36,6 +35,9 @@ function declareExchange(connection) {
 }
 
 var makingConnection = beginConnecting();
+makingConnection.then(function () {
+	console.log('Connected to rabbitmq');
+});
 var setupExchange = makingConnection.then(declareExchange);
 bindListenerQueue = setupExchange.then(function (exchange) {
 	console.log('listener exchange connect');
@@ -55,7 +57,6 @@ bindListenerQueue = setupExchange.then(function (exchange) {
 		});
 	});
 });
-
 
 ///Need to store one per user n stuff
 readers = {};

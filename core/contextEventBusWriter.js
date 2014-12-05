@@ -4,7 +4,7 @@ var Promise = require('promise');
 var connectionSettings = {
 	host: process.env.RABBITMQ_HOST || '192.168.59.103',
 	login: 'admin',
-	password: 'aXo0o4BrUyUq'
+	password: 'admin'
 };
 
 var exchangeSettings = {
@@ -13,7 +13,6 @@ var exchangeSettings = {
 };
 
 var exchange;
-
 
 function beginConnecting() {
 	return new Promise(function (resolve, reject) {
@@ -31,8 +30,9 @@ function declareExchange(connection) {
 	});
 }
 
-
-var setupExchange = beginConnecting().then(declareExchange);
+var setupExchange = beginConnecting().then(declareExchange).catch(function (err) {
+	console.error('Problem connecting to event bus writer...');
+});
 
 module.exports = function (userId) {
 	return {

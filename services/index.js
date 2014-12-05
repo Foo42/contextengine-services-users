@@ -10,6 +10,7 @@ var childProcesses = [];
 function startService(path) {
     var fullPath = require.resolve(path);
     return new Promise(function (resolve, reject) {
+        console.log('starting service:', path);
         var service = fork(fullPath, {
             silent: false
         });

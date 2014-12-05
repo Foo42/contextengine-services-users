@@ -13,13 +13,19 @@ module.exports = function (grunt) {
         options: {
           reporter: 'spec'
         },
-        src: ['test/server/unit/**/*.js']
+        src: ['test/server/unit/**/*.js', 'services/*/test/unit/**/*.js']
       },
       smoke: {
         options: {
           reporter: 'spec'
         },
-        src: ['test/smoke/**/*.js']
+        src: ['test/smoke/**/*.js', 'services/*/test/smoke/**/*.js']
+      },
+      functional: {
+        options: {
+          reporter: 'spec'
+        },
+        src: ['test/functional/**/*.js', 'services/*/test/functional/**/*.js']
       }
     },
     mocha: {
