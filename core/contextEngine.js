@@ -1,6 +1,5 @@
 var util = require('util');
 var EventEmitter = require('events').EventEmitter;
-var fileAppendingEventListener = require('./fileAppendingEventListener');
 var path = require('path');
 var mkdirp = require('mkdirp');
 var async = require('async');
@@ -9,25 +8,20 @@ var userConfigurationAccess = require('./userConfigurationAccess');
 var Promise = require('promise');
 var getConnectedContextEventBusWriter = require('./contextEventBusWriter');
 var getContextEventBusReader = require('./contextEventBusReader');
+var state = require('./State');
 
 var attachAllListeners = function attachAllListeners(contextEngine, done) {
-	var listeners = [
-		fileAppendingEventListener,
-		require('./State').StateInferenceEngine
-	];
-
 	var userConfig = userConfigurationAccess.forUser(contextEngine.user);
 
 	var contextEventBusWriter = getConnectedContextEventBusWriter(contextEngine.user.id);
 
 	getContextEventBusReader(contextEngine.user.id).then(function (contextEventBusReader) {
-		async.parallel(
-			[
-
-				function (done) {
-					require('./State').StateInferenceEngine.subscribeToContextEvents(contextEngine.user, contextEventBusReader, contextEventBusWriter, userConfig, done);
-				}
-			], function (err) {
+		state.StateInferenceEngine.subscribeToContextEvents(
+			contextEngine.user,
+			contextEventBusReader,
+			contextEventBusWriter,
+			userConfig,
+			function (err) {
 				done(err, contextEngine);
 			});
 	});
@@ -41,21 +35,12 @@ module.exports = (function () {
 			var contextEngine = new module.ContextEngine();
 			contextEngine.user = user;
 
-			async.waterfall(
-				[
-
-					function (callback) {
-						callback(null, contextEngine);
-					},
-					attachAllListeners
-				],
-				function (err, engine) {
-					if (err) {
-						return reject(err)
-					}
-					return resolve(engine);
+			attachAllListeners(contextEngine, function (err) {
+				if (err) {
+					return reject(err)
 				}
-			);
+				return resolve(contextEngine);
+			});
 		});
 	};
 
@@ -96,7 +81,7 @@ module.exports = (function () {
 		var generateEventId = (function () {
 			var counter = 0;
 			return function () {
-				return "" + counter+++(new Date().valueOf());
+				return "" + counter++ +(new Date().valueOf());
 			};
 		})();
 
@@ -115,11 +100,9 @@ module.exports = (function () {
 			done(null, recentEvents);
 		}
 
-
 	};
 
 	util.inherits(module.ContextEngine, EventEmitter);
-
 
 	return module;
 })();
