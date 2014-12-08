@@ -65,15 +65,19 @@ describe('application', function () {
 			assert.ifError(err);
 			assertIsRedirectTo(response, '/events/recent');
 
-			request.get({
-				url: host + '/events/recent'
-			}, function (err, response, body) {
-				assert.ifError(err);
-				var $ = cheerio.load(body);
-				console.log('li first = ' + $('li').first().text());
-				assert.equal($('li').first().text(), 'type: text detail:testing');
-				done();
-			});
+			setTimeout(function(){
+				request.get({
+					url: host + '/events/recent'
+				}, function (err, response, body) {
+					assert.ifError(err);
+					var $ = cheerio.load(body);
+					console.log('li first = ' + $('li').eq(0).text());
+					console.log('li second  = ' + $('li').eq(1).text());
+					assert.equal($('li').eq(0).text(), 'type: text detail:testing');
+					assert.equal($('li').eq(1).text(), 'type: stateChange.activated detail:testing');
+					done();
+				});	
+			},200);
 		});
 	});
 
