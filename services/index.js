@@ -40,7 +40,6 @@ module.exports.bootstrapServices = function () {
         [
             startService('./historicalEventService'),
             startService('./finateStateMachines'),
-            //startService('./legacyContextEngine'),
             startService('./webFrontEnd')
         ]
     );
