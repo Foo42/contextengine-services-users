@@ -20,6 +20,7 @@ function startService(path) {
             resolve();
         })
         childProcesses.push(service);
+        service.on('exit', console.log.bind(console, path, "exitted"));
         process.on('exit', service.kill.bind(service));
     });
 }
@@ -38,7 +39,8 @@ module.exports.bootstrapServices = function () {
     return Promise.all(
         [
             startService('./historicalEventService'),
-            startService('./legacyContextEngine'),
+            startService('./finateStateMachines'),
+            //startService('./legacyContextEngine'),
             startService('./webFrontEnd')
         ]
     );

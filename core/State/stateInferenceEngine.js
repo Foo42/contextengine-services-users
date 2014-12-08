@@ -161,7 +161,6 @@ module.exports = (function () {
 		});
 	};
 
-
 	util.inherits(module.StateInferenceEngine, EventEmitter);
 
 	return module;

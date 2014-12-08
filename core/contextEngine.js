@@ -81,7 +81,7 @@ module.exports = (function () {
 		var generateEventId = (function () {
 			var counter = 0;
 			return function () {
-				return "" + counter++ +(new Date().valueOf());
+				return "testing" + counter++ +(new Date().valueOf());
 			};
 		})();
 

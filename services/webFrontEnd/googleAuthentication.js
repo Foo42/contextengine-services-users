@@ -1,6 +1,6 @@
 var initialise = function () {
 	var passport = require('passport');
-	var registeredUsers = require('./registeredUsers');
+	var registeredUsers = require('../../registeredUsers');
 	var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
 	var hostName = process.env['HOST_NAME'];
 	var clientSecret = process.env['GOOGLE_CLIENT_SECRET'];
