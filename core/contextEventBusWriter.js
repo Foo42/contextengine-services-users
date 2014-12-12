@@ -3,13 +3,10 @@ var rabbitPie = require('rabbit-pie');
 ///Need to store one per user n stuff
 writers = {};
 
-console.log('rabbit-pie writer about to connect');
 var exchangeConnected = rabbitPie.connect().then(function (conn) {
-	console.log('rabbit-pie writer connected');
 	connection = conn;
 	return connection.declareExchange('unregisteredContextEvents');
 }).then(function (exchange) {
-	console.log('rabbit-pie writer exchange declared');
 	return exchange;
 });
 

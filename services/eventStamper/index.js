@@ -16,39 +16,14 @@ addEventMetadata = function (event) {
 	event.metadata.id = event.metadata.id || generateEventId();
 }
 
-console.log('Event stamper starting...');
+var unregisteredEventQueue = require('./unregisteredEventQueue');
+var contextEventExchange = require('./contextEventExchange');
+var bootstrap = Promise.all([unregisteredEventQueue, contextEventExchange]).then(function (results) {
+	console.log('event stamper: inbound and outbound connections established');
+	var inbound = results[0];
+	var outbound = results[1];
 
-var connecting = rabbitPie.connect();
-var contextEventExchangePreparing = connecting.then(function (conn) {
-	return conn.declareExchange('contextEvents');
-});
-
-contextEventExchangePreparing.then(function (contextEventExchange) {
-	console.log('event stamper connected to contextEvent exchange');
-});
-
-contextEventExchangePreparing.catch(function (err) {
-	console.err('Event stamper had error connecting to contextEvent exchange', err);
-});
-
-function publishAsConextEvent(event) {
-	contextEventExchangePreparing.then(function (contextEventExchange) {
-		console.log('republishing unregistered context event on contextEvent exchange');
-		contextEventExchange.publish('', event);
-	});
-}
-
-var unregisteredContextEventsQueuePreparing = connecting.then(function (conn) {
-	connection = conn;
-	console.log('event stamper connecting to unregisteredContextEvents exchange')
-	return connection.declareExchange('unregisteredContextEvents');
-}).then(function (exchange) {
-	console.log('unregisteredContextEvents exchange declared');
-	distextExchange = exchange;
-	return exchange.createQueue();
-}).then(function (queue) {
-	console.log('unregisteredContextEvents queue created');
-	queue.topicEmitter.on('#', function (msg) {
+	inbound.topicEmitter.on('#', function (msg) {
 		try {
 			msg = JSON.parse(msg);
 		} catch (e) {
@@ -58,11 +33,11 @@ var unregisteredContextEventsQueuePreparing = connecting.then(function (conn) {
 
 		addEventMetadata(msg);
 
-		return publishAsConextEvent(msg);
+		outbound.publish('', msg);
 	});
 });
 
-Promise.all([unregisteredContextEventsQueuePreparing, contextEventExchangePreparing]).then(function () {
+bootstrap.then(function () {
 	process.send(JSON.stringify({
 		status: "ready"
 	}));
