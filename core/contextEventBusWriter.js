@@ -7,7 +7,7 @@ console.log('rabbit-pie writer about to connect');
 var exchangeConnected = rabbitPie.connect().then(function (conn) {
 	console.log('rabbit-pie writer connected');
 	connection = conn;
-	return connection.declareExchange('contextEvents');
+	return connection.declareExchange('unregisteredContextEvents');
 }).then(function (exchange) {
 	console.log('rabbit-pie writer exchange declared');
 	return exchange;

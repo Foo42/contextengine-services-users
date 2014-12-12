@@ -38,6 +38,7 @@ module.exports.bootstrapServices = function () {
     process.on('SIGTERM', cleanUpChildProcesses);
     return Promise.all(
         [
+            startService('./eventStamper'),
             startService('./historicalEventService'),
             startService('./finateStateMachines'),
             startService('./webFrontEnd')
