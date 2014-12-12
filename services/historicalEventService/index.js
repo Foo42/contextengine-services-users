@@ -34,6 +34,7 @@ app.get('/events/recent', function (request, response) {
 
 function processIncomingContextEvent(event) {
 	log('recieved context event ' + JSON.stringify(event));
+	recentEvents[event.userId] = recentEvents[event.userId] || [];
 	recentEvents[event.userId].push(event);
 	log('stored event in memory');
 	persistEvent(event);

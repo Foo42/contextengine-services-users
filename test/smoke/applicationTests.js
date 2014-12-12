@@ -15,6 +15,7 @@ describe('application', function () {
 		this.timeout(8000);
 		var childEnv = {};
 		childEnv.OFFLINE_MODE = true;
+		childEnv.RABBITMQ_HOST = 'localdocker';
 		childEnv.USER_DATA_PATH = path.join(__dirname, '../../data/userSpecific');
 		child = fork('./index.js', {
 			env: childEnv,
@@ -40,10 +41,6 @@ describe('application', function () {
 	afterEach(function (done) {
 		setTimeout(function () {
 			console.log('about to kill child after test...');
-			// child.once('close', function (code) {
-			// 	console.log('child closed with code ' + code)
-			// 	done();
-			// });
 
 			child.once('exit', function (code) {
 				console.log('child exited with code ' + code)
@@ -65,7 +62,7 @@ describe('application', function () {
 			assert.ifError(err);
 			assertIsRedirectTo(response, '/events/recent');
 
-			setTimeout(function(){
+			setTimeout(function () {
 				request.get({
 					url: host + '/events/recent'
 				}, function (err, response, body) {
@@ -76,8 +73,8 @@ describe('application', function () {
 					assert.equal($('li').eq(0).text(), 'type: text detail:testing');
 					assert.equal($('li').eq(1).text(), 'type: stateChange.activated detail:testing');
 					done();
-				});	
-			},200);
+				});
+			}, 200);
 		});
 	});
 

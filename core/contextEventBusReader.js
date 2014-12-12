@@ -1,91 +1,53 @@
-//////////////////////////////////////////////////////////////////////////////////////
-
+var rabbitPie = require('rabbit-pie');
 var EventEmitter = require('events').EventEmitter;
-
-var amqp = require('amqp');
-var Promise = require('promise');
-
-var connectionSettings = {
-	host: process.env.RABBITMQ_HOST || '192.168.59.103',
-	login: 'admin',
-	password: 'admin'
-};
-
-var exchangeSettings = {
-	type: 'fanout',
-	autoDelete: false
-};
-
-var exchange;
-
-function beginConnecting() {
-	return new Promise(function (resolve, reject) {
-		var connection = amqp.createConnection(connectionSettings);
-		connection.once('ready', resolve.bind(null, connection));
-	});
-}
-
-function declareExchange(connection) {
-	return new Promise(function (resolve, reject) {
-		connection.exchange('contextEvents', {
-			type: 'fanout',
-			autoDelete: false
-		}, resolve.bind(null))
-	});
-}
-
-var makingConnection = beginConnecting();
-makingConnection.then(function () {
-	console.log('Connected to rabbitmq');
-});
-var setupExchange = makingConnection.then(declareExchange);
-bindListenerQueue = setupExchange.then(function (exchange) {
-	console.log('listener exchange connect');
-	return new Promise(function (resolveListenerQueue) {
-		makingConnection.then(function (connection) {
-			console.log('got connection to rabbitMQ reader');
-			connection.queue('tmp-' + Math.random(), {
-					exclusive: true
-				},
-				function queueCreated(queue) {
-					console.log('queue created');
-					queue.on('queueBindOk', function queueBound() {
-						resolveListenerQueue(queue);
-					});
-					queue.bind('contextEvents', '');
-				});
-		});
-	});
-});
 
 ///Need to store one per user n stuff
 readers = {};
 
-module.exports = function (userId) {
-	console.log('in listener queue exports');
-	return bindListenerQueue.then(function (queue) {
-		if (readers[userId]) {
-			console.log('reaturning previously created rabbitMQ conext event listener for ' + userId);
-			return readers[userId];
+console.log('rabbit-pie reader about to connect');
+var queueConnected = rabbitPie.connect().then(function (conn) {
+	console.log('rabbit-pie reader connected');
+	connection = conn;
+	return connection.declareExchange('contextEvents');
+}).then(function (exchange) {
+	console.log('rabbit-pie reader exchange declared');
+	distextExchange = exchange;
+	return exchange.createQueue();
+}).then(function (queue) {
+	console.log('rabbit-pie reader queue created');
+	queue.topicEmitter.on('#', function (msg) {
+		try {
+			msg = JSON.parse(msg);
+		} catch (e) {
+			console.warn('failed to parse incoming context event as json. Ignoring')
+			return;
 		}
-		console.log('creating rabbitMQ context event listener for ' + userId);
-		var emitter = new EventEmitter();
-		emitter.userId = userId;
-		readers[userId] = emitter;
-		queue.subscribe(function (msg) {
-			var eventAsObj;
-			try {
-				var eventAsObj = JSON.parse(msg.data.toString('utf-8'));
-			} catch (e) {
-				console.error('error parsing contextEvent coming off queue ' + e);
-			}
-			if (!eventAsObj) {
-				return;
-			}
-			emitter.emit('context event', eventAsObj);
-			console.log(msg.data.toString('utf-8'));
-		});
-		console.log('returning emitter for user', userId, 'with userId property of', emitter.userId);
-		return emitter;
+
+		console.log('reader recieved', msg, 'of type', typeof msg);
+		if (!msg.userId) {
+			console.log('recieved context event without userId');
+			return;
+		}
+
+		var reader = readers[msg.userId];
+		if (!reader) {
+			console.log('recieved context event for user before they are listening', msg.userId);
+			return;
+		}
+
+		reader.emit('context event', msg);
+	});
+});
+
+queueConnected.catch(function (err) {
+	console.error('badness connecting event bus reader', err);
+});
+
+module.exports = function (userId) {
+	if (!readers[userId]) {
+		readers[userId] = new EventEmitter();
+	}
+	return queueConnected.then(function () {
+		return readers[userId]
 	});
 };

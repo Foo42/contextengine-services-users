@@ -21,7 +21,8 @@
     "cron": "~1.0.3",
     "amqp": "^0.2.0",
     "request": "~2.16.6",
-    "promise": "~5.0.0"
+    "promise": "~5.0.0",
+    "rabbit-pie": "~0.0.3"
   },
   "devDependencies": {
     "chai": "^1.9.1",
