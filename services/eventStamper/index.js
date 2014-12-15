@@ -22,7 +22,6 @@ var bootstrap = Promise.all([unregisteredEventQueue, contextEventExchange]).then
 	console.log('event stamper: inbound and outbound connections established');
 	var inbound = results[0];
 	var outbound = results[1];
-
 	inbound.topicEmitter.on('#', function (msg) {
 		try {
 			msg = JSON.parse(msg);
@@ -38,6 +37,9 @@ var bootstrap = Promise.all([unregisteredEventQueue, contextEventExchange]).then
 });
 
 bootstrap.then(function () {
+	if (!process || !process.send) {
+		return;
+	}
 	process.send(JSON.stringify({
 		status: "ready"
 	}));
