@@ -1,7 +1,7 @@
 var Promise = require('promise');
 var getConnectedContextEventBusWriter = require('../../core/contextEventBusWriter');
 var getContextEventBusReader = require('../../core/contextEventBusReader');
-var state = require('../../core/State');
+var state = require('./lib');
 var registeredUsersAccess = require('../../registeredUsers');
 var userConfigurationAccess = require('../../core/userConfigurationAccess');
 

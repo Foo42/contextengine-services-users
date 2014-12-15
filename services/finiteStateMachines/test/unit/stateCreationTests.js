@@ -1,5 +1,5 @@
 var assert = require("assert");
-var binaryState = require('../../../core/State').binaryState;
+var binaryState = require('../../lib').binaryState;
 var EventEmitter = require('events').EventEmitter;
 var _ = require('lodash');
 
@@ -252,7 +252,6 @@ describe('State creation', function () {
 				assert.ok(fakeStateExpression.isWatching);
 				expressionValue = false;
 				fakeStateExpression.emit('valueChanged', expressionValue);
-
 
 			});
 		});

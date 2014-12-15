@@ -1,5 +1,5 @@
 var assert = require("assert")
-var StateInferenceEngine = require('../../../core/State').StateInferenceEngine;
+var StateInferenceEngine = require('../../lib').StateInferenceEngine;
 var EventEmitter = require('events').EventEmitter;
 
 describe('StateInferenceEngine', function () {

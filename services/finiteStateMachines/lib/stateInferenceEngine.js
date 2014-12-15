@@ -1,4 +1,3 @@
-var objectMatches = require('../objectMatches');
 var util = require('util');
 var EventEmitter = require('events').EventEmitter;
 var _ = require('lodash');
@@ -8,7 +7,7 @@ var finiteStateDirectQueryService = require('./finiteStateDirectQueryService');
 
 var addStatesFromConfig = function (contextEventBusReader, listener, config, callback) {
 	var stateQueryService = require('./stateQueryService')(listener);
-	var expressionFactory = require('../ContextExpression')(contextEventBusReader, stateQueryService);
+	var expressionFactory = require('../../../core/ContextExpression')(contextEventBusReader, stateQueryService);
 
 	async.map(
 		config,

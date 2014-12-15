@@ -1,6 +1,6 @@
 var assert = require("assert")
 var EventEmitter = require('events').EventEmitter;
-var StateQueryService = require('../../../core/State').StateQueryService;
+var StateQueryService = require('../../lib').StateQueryService;
 
 describe('StateQueryService,', function () {
 	describe('created query objects', function () {
