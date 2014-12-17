@@ -2,7 +2,7 @@ console.log('HistorialEventService starting...');
 var http = require('http');
 var express = require('express');
 var getEventBusListener = require('../../core/contextEventBusReader');
-var registeredUsersAccess = require('../../registeredUsers');
+var registeredUsersAccess = require('../users/client');
 var Promise = require('promise');
 var path = require('path');
 var fs = require('fs');
@@ -46,7 +46,7 @@ var baseUserDataPath = (process.env.USER_DATA_PATH || path.join(path.dirname(req
 http.createServer(app).listen(app.get('port'), function () {
 	log('server listening on port ' + app.get('port'));
 	log('loading registered users');
-	registeredUsersAccess.getAllRegisteredUsers_().then(function (users) {
+	registeredUsersAccess.getAllRegisteredUsers().then(function (users) {
 		log('got registered users');
 		var gettingBusAccessForEachUser = users
 			.map(function (user) {

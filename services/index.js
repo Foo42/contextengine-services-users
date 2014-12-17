@@ -36,12 +36,20 @@ function cleanUpChildProcesses() {
 module.exports.bootstrapServices = function () {
     process.on('SIGINT', cleanUpChildProcesses);
     process.on('SIGTERM', cleanUpChildProcesses);
+
     return Promise.all(
-        [
-            startService('./eventStamper'),
-            startService('./historicalEventService'),
-            startService('./finiteStateMachines'),
-            startService('./webFrontEnd')
-        ]
-    );
+            [
+                startService('./users'),
+                startService('./eventStamper')
+            ]).then(function () {
+            return startService('./historicalEventService')
+        })
+        .then(function () {
+            return Promise.all(
+                [,
+                    startService('./finiteStateMachines'),
+                    startService('./webFrontEnd')
+                ]
+            )
+        });
 }
