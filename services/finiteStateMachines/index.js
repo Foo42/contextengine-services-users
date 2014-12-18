@@ -2,7 +2,7 @@ var Promise = require('promise');
 var getConnectedContextEventBusWriter = require('../../core/contextEventBusWriter');
 var getContextEventBusReader = require('../../core/contextEventBusReader');
 var state = require('./lib');
-var registeredUsersAccess = require('../../registeredUsers');
+var registeredUsersAccess = require('../users/client');
 var userConfigurationAccess = require('../../core/userConfigurationAccess');
 
 function createContextEngineForUser(user) {
@@ -35,7 +35,7 @@ function createContextEngineForUser(user) {
 var enginePromisesByUser = {};
 
 function start() {
-	var beginCreationOfEnginesForAllUsers = registeredUsersAccess.getAllRegisteredUsers_().then(function (users) {
+	var beginCreationOfEnginesForAllUsers = registeredUsersAccess.getAllRegisteredUsers().then(function (users) {
 		return users.map(function (user) {
 			var enginePromise = enginePromisesByUser[user.id] = createContextEngineForUser(user);
 			return enginePromise;

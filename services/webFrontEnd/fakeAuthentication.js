@@ -6,9 +6,11 @@ var initialise = function () {
 
 		ensureAuthenticated: function (req, res, next) {
 			req.user = req.user || {
-				id: 'someone'
+				id: 'someone',
+				emails: [{
+					value: 'someone@example.com'
+				}]
 			};
-
 
 			next();
 		},

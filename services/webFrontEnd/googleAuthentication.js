@@ -1,6 +1,6 @@
 var initialise = function () {
 	var passport = require('passport');
-	var registeredUsers = require('../../registeredUsers');
+	var userAccess = require('../users/client');
 	var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
 	var hostName = process.env['HOST_NAME'];
 	var clientSecret = process.env['GOOGLE_CLIENT_SECRET'];
@@ -30,19 +30,18 @@ var initialise = function () {
 
 	var ensureAuthenticated = function (req, res, next) {
 		if (req.isAuthenticated()) {
-			registeredUsers.findUser(req.user, function (err, user) {
-				if (err) {
-					console.log('did not find user ' + JSON.stringify(user))
-					return err;
+			userAccess.isRegisteredUser(req.user).then(function (result) {
+				if (result) {
+					return next();
 				}
-
-				return next();
+				res.send(403).end();
+			}).catch(function (err) {
+				res.send(500).end();
 			});
 		} else {
 			console.log('isAuthenticated failed');
 			res.redirect('/login');
 		}
-
 	};
 
 	var userHasEmailAddressOf = function (user, address) {
@@ -58,7 +57,6 @@ var initialise = function () {
 		},
 
 		setupRoutes: function (app) {
-
 
 			app.get('/account', ensureAuthenticated, function (req, res) {
 				res.render('account', {

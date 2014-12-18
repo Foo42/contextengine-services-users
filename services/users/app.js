@@ -1,7 +1,7 @@
 console.log('Users service starting...');
 var http = require('http');
 var express = require('express');
-var registeredUsersAccess = require('../../registeredUsers');
+var registeredUsersAccess = require('./registeredUsers');
 var Promise = require('promise');
 
 var log = console.log.bind(console, 'Users Service:');
@@ -22,5 +22,19 @@ app.get('/users', function (req, res) {
 		res.json(users);
 	});
 });
+
+app.get('/emailAddresses/:userEmail', function (req, res) {
+	console.log('looking up user by email', req.params.userEmail);
+	registeredUsersAccess.findUser({
+		emails: [{
+			value: req.params.userEmail
+		}]
+	}, function (err, user) {
+		if (err) {
+			return res.send(404).end();
+		}
+		return res.json(user);
+	});
+})
 
 module.exports = app;

@@ -1,7 +1,8 @@
 var _ = require('lodash');
-
+var Promise = require('promise');
 var fs = require('fs');
-var file = __dirname + '/data/users.json';
+var file = __dirname + '/../../data/users.json';
+console.log('users file is at', file);
 var users;
 
 var loadUsersFromFile = function loadUsersFromFile(done) {
@@ -18,8 +19,7 @@ var loadUsersFromFile = function loadUsersFromFile(done) {
 		return done(err, users);
 	});
 };
-
-
+var loadUsersFromFile_ = Promise.denodeify(loadUsersFromFile);
 
 var userHasEmailAddressOf = function (user, address) {
 	return user.emails.filter(function (email) {
@@ -29,18 +29,20 @@ var userHasEmailAddressOf = function (user, address) {
 
 module.exports = {
 	findUser: function (user, done) {
-		console.log('looking up user' + JSON.stringify(user));
-		var foundUser = _.any(users, function (registeredUser) {
-			return userHasEmailAddressOf(user, registeredUser.emailAddress);
-		});
+		loadUsersFromFile_.then(function (users) {
+			console.log('looking up user' + JSON.stringify(user));
+			var foundUser = _.any(users, function (registeredUser) {
+				return userHasEmailAddressOf(user, registeredUser.emailAddress);
+			});
 
-		if (!foundUser) {
-			done("ERROR: user not found");
-		} else {
-			done(null, user);
-		}
+			if (!foundUser) {
+				done("ERROR: user not found");
+			} else {
+				done(null, user);
+			}
+		});
 	},
 
 	getAllRegisteredUsers: loadUsersFromFile,
-	getAllRegisteredUsers_: require('promise').denodeify(loadUsersFromFile)
+	getAllRegisteredUsers_: loadUsersFromFile_
 }
