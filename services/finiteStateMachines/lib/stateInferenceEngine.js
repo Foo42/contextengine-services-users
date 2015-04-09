@@ -15,7 +15,7 @@ var addStatesFromConfig = function (contextEventBusReader, listener, config, cal
 			binaryState.createRule(stateConfig, expressionFactory, done);
 		},
 		function (err, states) {
-			console.log('finished mapping state config to states: err: ' + err);
+			console.log('finished mapping state config to states:', states);
 			states.forEach(function (state) {
 				listener.add(state)
 			});
@@ -32,10 +32,11 @@ module.exports = (function () {
 	module.subscribeToContextEvents = function (user, contextEventBusReader, contextEventBusWriter, userConfig, done) {
 		console.info('attatching state inference engine');
 
+		var configAccessForUser = require('../../users/client').configAccessForUser(user);
+		var activeConfig;
 		async.waterfall(
 			[
-				userConfig.getStateConfig,
-				function (stateConfig, done) {
+				function (done) {
 					var taskScheduler = {
 						setTimeout: setTimeout,
 						clearTimeout: clearTimeout,
@@ -46,7 +47,10 @@ module.exports = (function () {
 
 					var listener = new module.StateInferenceEngine();
 
-					userConfig.watchStateConfig(function (newConfig, delta) {
+					configAccessForUser.watchStateConfig(function (change) {
+						var delta = change.delta;
+						console.log('recieved update via rabbit mq!', JSON.stringify(delta));
+
 						console.log('state config changed for user ' + user.id + ' ' + delta.added.length + ' states added ' + delta.removed.length + ' states removed');
 						var stateHasSha = function (sha) {
 							return function (state) {
@@ -59,23 +63,32 @@ module.exports = (function () {
 
 						listener.removeStatesWhere(isRemovedState, function (err) {
 							if (err) {
+								console.error('error removing states', err);
 								return
 							};
 							addStatesFromConfig(contextEventBusReader, listener, delta.added, function () {});
 						});
+
+					}).then(function () {
+						console.log('finiteStateEngine is listening for state changes for user', user.id);
+					}).catch(function (err) {
+						console.log('error connecting finiteStateEngine for state changes for user', user.id, err);
 					});
 
-					addStatesFromConfig(contextEventBusReader, listener, stateConfig.states, function () {
-						listener.on('stateChange.activated', function (event) {
-							contextEventBusWriter.registerNewEvent(event, function () {})
-						});
-						listener.on('stateChange.deactivated', function (event) {
-							contextEventBusWriter.registerNewEvent(event, function () {})
-						});
+					configAccessForUser.getStateConfig().then(function (stateConfig) {
+						activeConfig = stateConfig;
+						addStatesFromConfig(contextEventBusReader, listener, stateConfig.states, function () {
+							listener.on('stateChange.activated', function (event) {
+								contextEventBusWriter.registerNewEvent(event, function () {})
+							});
+							listener.on('stateChange.deactivated', function (event) {
+								contextEventBusWriter.registerNewEvent(event, function () {})
+							});
 
-						finiteStateDirectQueryService.registerStateAccessFunction(user.id, listener.getAllStates.bind(listener));
+							finiteStateDirectQueryService.registerStateAccessFunction(user.id, listener.getAllStates.bind(listener));
 
-						done();
+							done();
+						});
 					});
 				}
 			],

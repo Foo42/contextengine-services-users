@@ -23,12 +23,12 @@ module.exports = {
 				delete state.sha
 			});
 
+			console.log('setting state config. writing to file', stateConfigPath);
 			fs.writeFile(stateConfigPath, JSON.stringify(copyOfConfig), done);
 		}
 
 		access.getStateConfig = function getStateConfig(done) {
 			console.info('getting state config for user ' + user.id);
-
 
 			var createStateConfigFromJSONString = function createStateConfigFromJSONString(fileContent) {
 				config = JSON.parse(fileContent);
@@ -44,16 +44,20 @@ module.exports = {
 			console.log('about to try reading state config file');
 			fs.readFile(stateConfigPath, function (err, fileContent) {
 				if (err && err.code == 'ENOENT') {
+					console.log('User', user.id, 'has no config file. Creating it at', stateConfigPath);
 					fileContent = '{"states":[]}'
 					fs.writeFile(stateConfigPath, fileContent, function (err) {
 						if (err) {
 							return done(err);
 						}
 
+						console.log('User', user.id, 'config file created at', stateConfigPath);
 						done(null, createStateConfigFromJSONString(fileContent));
 					});
 				} else {
-
+					if (err) {
+						console.error('Unexpected error reading user config file for user', user.id, 'at path', userConfigPath, ':', err);
+					}
 					done(err, createStateConfigFromJSONString(fileContent));
 				}
 			});

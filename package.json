@@ -34,7 +34,8 @@
     "grunt-mocha-test": "~0.8.2",
     "grunt-notify": "~0.2.17",
     "mocha": "~1.17.1",
-    "proxyquire": "^1.0.1"
+    "proxyquire": "^1.0.1",
+    "supertest": "^0.15.0"
   },
   "scripts": {
     "test": "grunt test"

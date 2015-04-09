@@ -1,89 +1,99 @@
 var EventEmitter = require('events').EventEmitter;
 
-var createRule = function(config, expressionFactory, callback){
+var createRule = function (config, expressionFactory, callback) {
 	console.log('creating state rule with specification ' + JSON.stringify(config));
 	var state = new EventEmitter();
 	state.active = false;
 
 	state.name = config.name || 'anon';
 	state.sha = config.sha;
-	state.dispose = function(){
+	state.dispose = function () {
 		state.emit('disposing');
 	}
 
-	var activate = function activate(){
-		if(state.active){
+	var activate = function activate() {
+		if (state.active) {
 			return;
 		}
 		state.active = true;
+		console.log(state.name, 'activated');
 		state.emit('activated');
 	}
 
-	var deactivate = function deactivate(){
-		if(!state.active){
+	var deactivate = function deactivate() {
+		if (!state.active) {
 			return;
 		}
 		state.active = false;
+		console.log(state.name, 'deactivated');
 		state.emit('deactivated');
 	}
 
-	if(config.isActive){
+	if (config.isActive) {
 		var stateExpression = expressionFactory.createStateExpression(config.isActive);
 
-		stateExpression.on('valueChanged', function(newValue){
+		stateExpression.on('valueChanged', function (newValue) {
 			newValue ? activate() : deactivate();
 		});
 
 		stateExpression.startWatch();
 
-		stateExpression.evaluate(function(err, result){
-			if(err){
+		stateExpression.evaluate(function (err, result) {
+			if (err) {
 				return callback(err);
 			}
 
 			result ? activate() : deactivate();
 		});
 
-		state.on('disposing', function(){stateExpression.stopWatch()});
-			
-	} else if(config.enter || config.exit){
+		state.on('disposing', function () {
+			stateExpression.stopWatch()
+		});
+
+	} else if (config.enter || config.exit) {
 		console.log('state has enter / exit conditions');
-		if(config.enter){
-			
+		if (config.enter) {
+
 			var entryExpression = expressionFactory.createEventExpression(config.enter);
-			
-			state.on('activated', function(){
+
+			state.on('activated', function () {
 				entryExpression.stopWatch();
 			});
-			
-			state.on('deactivated', function(){
+
+			state.on('deactivated', function () {
 				entryExpression.startWatch();
 			});
 
-			entryExpression.on('triggered', function(){
+			entryExpression.on('triggered', function () {
 				activate();
 			});
 
-			state.on('disposing', function(){entryExpression.stopWatch()});
+			state.on('disposing', function () {
+				entryExpression.stopWatch()
+			});
 			entryExpression.startWatch();
 		}
 
-		if(config.exit){
+		if (config.exit) {
 			var exitExpression = expressionFactory.createEventExpression(config.exit);
-			state.on('deactivated', function(){
+			state.on('deactivated', function () {
 				exitExpression.stopWatch();
 			});
-			state.on('activated',function(){
+			state.on('activated', function () {
 				exitExpression.startWatch();
 			});
-			exitExpression.on('triggered', function(){
+			exitExpression.on('triggered', function () {
 				deactivate();
 			});
-			state.on('disposing', function(){exitExpression.stopWatch()});
+			state.on('disposing', function () {
+				exitExpression.stopWatch()
+			});
 		}
 	}
-
+	console.log('created state', state.name, 'state.active =', state.active);
 	callback(null, state);
 };
 
-module.exports = {createRule:createRule};
+module.exports = {
+	createRule: createRule
+};

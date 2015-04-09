@@ -34,6 +34,9 @@ var bootstrap = Promise.all([unregisteredEventQueue, contextEventExchange]).then
 
 		outbound.publish('', msg);
 	});
+}).catch(function (e) {
+	console.error('ERROR starting event stamper service:', e);
+	process.exit(1);
 });
 
 bootstrap.then(function () {

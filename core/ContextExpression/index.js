@@ -17,9 +17,11 @@ module.exports = function (contextEventBusReader, stateQueryService) {
 
 		return {
 			startWatch: function () {
+				console.log('startWatch with spec', specification);
 				query.startWatch()
 			},
 			stopWatch: function () {
+				console.log('stopWatch with spec', specification);
 				query.stopWatch()
 			},
 			on: function (event, callback) {
@@ -47,10 +49,13 @@ module.exports = function (contextEventBusReader, stateQueryService) {
 
 		if (specification.eventMatching) {
 			var processEventMatching = function processEventMatching(e) {
+				console.log('processing event', e, 'with spec', specification);
 				if (!isWatching) {
+					console.log('not watching with spec', specification);
 					return;
 				}
 				if (objectMatches(e, specification.eventMatching)) {
+					console.log('triggering ', specification);
 					triggerEvent();
 				}
 			};
@@ -72,11 +77,13 @@ module.exports = function (contextEventBusReader, stateQueryService) {
 		return {
 			startWatch: function () {
 				isWatching = true;
+				console.trace('starting watch');
 				expression.emit('starting watch');
 				contextEventBusReader.on('context event', handleEvent);
 			},
 			stopWatch: function () {
 				isWatching = false;
+				console.trace('stopping watch');
 				expression.emit('stopping watch');
 				contextEventBusReader.removeListener('event', handleEvent);
 			},
