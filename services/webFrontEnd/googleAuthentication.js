@@ -1,3 +1,4 @@
+var logger = require('../../core/logger');
 var initialise = function () {
 	var passport = require('passport');
 	var userAccess = require('../users/client');
@@ -7,13 +8,13 @@ var initialise = function () {
 	var clientID = process.env['GOOGLE_CLIENT_ID'];
 
 	passport.serializeUser(function (user, done) {
-		console.log('in serializeUser. user = ' + JSON.stringify(user));
+		logger.log('in serializeUser. user = ' + JSON.stringify(user));
 		done(null, user);
 	});
 
 	passport.deserializeUser(function (obj, done) {
 		//attach context engine here?
-		console.log("deserializeUser: " + JSON.stringify(obj));
+		logger.log("deserializeUser: " + JSON.stringify(obj));
 		done(null, obj);
 	});
 
@@ -23,7 +24,6 @@ var initialise = function () {
 			callbackURL: "http://" + hostName + "/auth/google/callback"
 		},
 		function (accessToken, refreshToken, profile, done) {
-			console.log('in thingy. profile = ' + JSON.stringify(profile));
 			return done(null, profile);
 		}
 	));
@@ -39,7 +39,7 @@ var initialise = function () {
 				res.send(500).end();
 			});
 		} else {
-			console.log('isAuthenticated failed');
+			logger.log('isAuthenticated failed');
 			res.redirect('/login');
 		}
 	};

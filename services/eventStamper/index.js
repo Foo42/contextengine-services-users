@@ -1,6 +1,7 @@
 var rabbitPie = require('rabbit-pie');
 var EventEmitter = require('events').EventEmitter;
 var Promise = require('promise');
+var logger = require('../../core/logger');
 
 var generateEventId = (function () {
 	var counter = 0;
@@ -19,14 +20,14 @@ addEventMetadata = function (event) {
 var unregisteredEventQueue = require('./unregisteredEventQueue');
 var contextEventExchange = require('./contextEventExchange');
 var bootstrap = Promise.all([unregisteredEventQueue, contextEventExchange]).then(function (results) {
-	console.log('event stamper: inbound and outbound connections established');
+	logger.log('inbound and outbound connections established');
 	var inbound = results[0];
 	var outbound = results[1];
 	inbound.topicEmitter.on('#', function (msg) {
 		try {
 			msg = JSON.parse(msg);
 		} catch (e) {
-			console.warn('failed to parse incoming context event as json. Ignoring')
+			logger.warn('failed to parse incoming context event as json. Ignoring')
 			return;
 		}
 
@@ -35,7 +36,7 @@ var bootstrap = Promise.all([unregisteredEventQueue, contextEventExchange]).then
 		outbound.publish('', msg);
 	});
 }).catch(function (e) {
-	console.error('ERROR starting event stamper service:', e);
+	logger.error('ERROR starting event stamper service:', e);
 	process.exit(1);
 });
 
@@ -47,6 +48,6 @@ bootstrap.then(function () {
 		status: "ready"
 	}));
 }).catch(function (err) {
-	console.log('badness', err);
+	logger.log('badness', err);
 	process.exit(1);
 })

@@ -4,13 +4,13 @@ var crypto = require('crypto');
 var createHash = crypto.createHash.bind(crypto, 'sha1');
 var EventEmitter = require('events').EventEmitter;
 var _ = require('lodash');
+var logger = require('../logger');
 
 module.exports = {
 	forUser: function (user) {
-		console.log('looking up user config for user ' + user.id);
+		logger.log('looking up user config for user ' + user.id);
 		var baseUserDataPath = (process.env.USER_DATA_PATH || path.join(path.dirname(require.main.filename), 'data', 'userSpecific'));
 		var userDataPath = path.join(baseUserDataPath, user.id);
-		console.log('user data path = ' + userDataPath);
 		var userConfigPath = path.join(userDataPath, 'config');
 		var stateConfigPath = path.join(userConfigPath, 'stateConfig.json');
 
@@ -23,12 +23,12 @@ module.exports = {
 				delete state.sha
 			});
 
-			console.log('setting state config. writing to file', stateConfigPath);
+			logger.log('Setting config for user', user.id);
 			fs.writeFile(stateConfigPath, JSON.stringify(copyOfConfig), done);
 		}
 
 		access.getStateConfig = function getStateConfig(done) {
-			console.info('getting state config for user ' + user.id);
+			logger.log('getting state config for user', user.id);
 
 			var createStateConfigFromJSONString = function createStateConfigFromJSONString(fileContent) {
 				config = JSON.parse(fileContent);
@@ -41,22 +41,21 @@ module.exports = {
 				return config;
 			}
 
-			console.log('about to try reading state config file');
 			fs.readFile(stateConfigPath, function (err, fileContent) {
 				if (err && err.code == 'ENOENT') {
-					console.log('User', user.id, 'has no config file. Creating it at', stateConfigPath);
+					logger.log('User', user.id, 'has no config file. Creating it at', stateConfigPath);
 					fileContent = '{"states":[]}'
 					fs.writeFile(stateConfigPath, fileContent, function (err) {
 						if (err) {
 							return done(err);
 						}
 
-						console.log('User', user.id, 'config file created at', stateConfigPath);
+						logger.log('User', user.id, 'config file created at', stateConfigPath);
 						done(null, createStateConfigFromJSONString(fileContent));
 					});
 				} else {
 					if (err) {
-						console.error('Unexpected error reading user config file for user', user.id, 'at path', userConfigPath, ':', err);
+						logger.error('Unexpected error reading user config file for user', user.id, 'at path', userConfigPath, ':', err);
 					}
 					done(err, createStateConfigFromJSONString(fileContent));
 				}
@@ -71,7 +70,7 @@ module.exports = {
 					persistent: false
 				}, function configFileChanged(event) {
 					if (event === 'change') {
-						console.log('detected file change event on file: ' + stateConfigPath);
+						logger.log('detected file change event on file: ' + stateConfigPath);
 						access.getStateConfig(function (err, newConfig) {
 							if (err) {
 								return;

@@ -1,5 +1,6 @@
 var rabbitPie = require('rabbit-pie');
 var EventEmitter = require('events').EventEmitter;
+var logger = require('./logger');
 
 ///Need to store one per user n stuff
 readers = {};
@@ -15,18 +16,18 @@ var queueConnected = rabbitPie.connect().then(function (conn) {
 		try {
 			msg = JSON.parse(msg);
 		} catch (e) {
-			console.warn('failed to parse incoming context event as json. Ignoring')
+			logger.warn('failed to parse incoming context event as json. Ignoring')
 			return;
 		}
 
 		if (!msg.userId) {
-			console.log('recieved context event without userId');
+			logger.warn('recieved context event without userId');
 			return;
 		}
 
 		var reader = readers[msg.userId];
 		if (!reader) {
-			console.log('recieved context event for user before they are listening', msg.userId);
+			logger.warn('recieved context event for user before they are listening', msg.userId);
 			return;
 		}
 
@@ -35,7 +36,8 @@ var queueConnected = rabbitPie.connect().then(function (conn) {
 });
 
 queueConnected.catch(function (err) {
-	console.error('badness connecting event bus reader', err);
+	logger.error('badness connecting event bus reader', err);
+	process.exit(1);
 });
 
 module.exports = function (userId) {

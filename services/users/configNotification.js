@@ -1,3 +1,4 @@
+var logger = require('../../core/logger');
 var rabbitPie = require('rabbit-pie');
 var EventEmitter = require('events').EventEmitter;
 
@@ -9,12 +10,12 @@ module.exports = {
 			}).then(function (exchange) {
 				return {
 					publishConfigChangeForUser: function (userId, changeEvent) {
-						console.log('publishing config change event for', userId);
+						logger.log('publishing config change event for', userId);
 						var key = [userId, 'config.state.changed'].join('.');
 						exchange.publish(key, changeEvent);
 					}
 				}
-			})
+			});
 	},
 	listener: function () {
 		return rabbitPie.connect()
@@ -23,11 +24,10 @@ module.exports = {
 			}).then(function (exchange) {
 				return exchange.createQueue();
 			}).then(function (queue) {
-				console.log('config listener queue created')
 				return {
 					subscribeToConfigChangesForUser: function (userId, callback) {
-						console.log('recieving config change event for', userId);
 						queue.topicEmitter.on(userId + '.config.state.changed', function (msg) {
+							logger.log('recieved config change event for', userId);
 							callback(JSON.parse(msg));
 						});
 					}

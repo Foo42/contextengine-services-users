@@ -24,13 +24,11 @@ var stateQueryService = (function () {
 		createQuery: function (stateName) {
 			var query = new EventEmitter();
 			query.currentValue = function (callback) {
-				console.log('in query service query currentValue, state = ' + states[stateName]);
 				return callback(null, states[stateName]);
 			};
 			query.startWatch = function () {
 				query.watching = true;
 				stateWatches.on(stateName, function (newValue) {
-					console.log('about to emit valueChanged to subs ' + Object.keys(query._events));
 					if (query.watching) {
 						query.emit('valueChanged', newValue);
 					}
@@ -58,7 +56,6 @@ var ContextExpression;
 
 describe('Context expressions', function () {
 	beforeEach(function (done) {
-		console.log('in before each');
 		eventBus._events = {};
 		states = {};
 		stateQueryService.cleanUp();

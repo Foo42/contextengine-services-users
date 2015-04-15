@@ -1,7 +1,7 @@
 var EventEmitter = require('events').EventEmitter;
+var logger = require('../../../core/logger');
 
 var createRule = function (config, expressionFactory, callback) {
-	console.log('creating state rule with specification ' + JSON.stringify(config));
 	var state = new EventEmitter();
 	state.active = false;
 
@@ -16,7 +16,7 @@ var createRule = function (config, expressionFactory, callback) {
 			return;
 		}
 		state.active = true;
-		console.log(state.name, 'activated');
+		logger.info(state.name, 'activated');
 		state.emit('activated');
 	}
 
@@ -25,7 +25,7 @@ var createRule = function (config, expressionFactory, callback) {
 			return;
 		}
 		state.active = false;
-		console.log(state.name, 'deactivated');
+		logger.info(state.name, 'deactivated');
 		state.emit('deactivated');
 	}
 
@@ -51,7 +51,6 @@ var createRule = function (config, expressionFactory, callback) {
 		});
 
 	} else if (config.enter || config.exit) {
-		console.log('state has enter / exit conditions');
 		if (config.enter) {
 
 			var entryExpression = expressionFactory.createEventExpression(config.enter);
@@ -90,7 +89,6 @@ var createRule = function (config, expressionFactory, callback) {
 			});
 		}
 	}
-	console.log('created state', state.name, 'state.active =', state.active);
 	callback(null, state);
 };
 

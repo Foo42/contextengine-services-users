@@ -4,6 +4,7 @@ var _ = require('lodash');
 var async = require('async');
 var binaryState = require('./binaryState');
 var finiteStateDirectQueryService = require('./finiteStateDirectQueryService');
+var logger = require('../../../core/logger');
 
 var addStatesFromConfig = function (contextEventBusReader, listener, config, callback) {
 	var stateQueryService = require('./stateQueryService')(listener);
@@ -15,13 +16,12 @@ var addStatesFromConfig = function (contextEventBusReader, listener, config, cal
 			binaryState.createRule(stateConfig, expressionFactory, done);
 		},
 		function (err, states) {
-			console.log('finished mapping state config to states:', states);
 			states.forEach(function (state) {
 				listener.add(state)
 			});
-			console.log('added ' + states.length + ' states');
+			logger.log('added ' + states.length + ' states');
 
-			callback(null)
+			callback(null, states.length)
 		}
 	);
 }
@@ -30,7 +30,7 @@ module.exports = (function () {
 	var module = {};
 
 	module.subscribeToContextEvents = function (user, contextEventBusReader, contextEventBusWriter, userConfig, done) {
-		console.info('attatching state inference engine');
+		logger.info('attatching state inference engine');
 
 		var configAccessForUser = require('../../users/client').configAccessForUser(user);
 		var activeConfig;
@@ -49,9 +49,8 @@ module.exports = (function () {
 
 					configAccessForUser.watchStateConfig(function (change) {
 						var delta = change.delta;
-						console.log('recieved update via rabbit mq!', JSON.stringify(delta));
 
-						console.log('state config changed for user ' + user.id + ' ' + delta.added.length + ' states added ' + delta.removed.length + ' states removed');
+						logger.log('state config changed for user ' + user.id + ' ' + delta.added.length + ' states added ' + delta.removed.length + ' states removed');
 						var stateHasSha = function (sha) {
 							return function (state) {
 								return state.sha === sha
@@ -63,16 +62,14 @@ module.exports = (function () {
 
 						listener.removeStatesWhere(isRemovedState, function (err) {
 							if (err) {
-								console.error('error removing states', err);
+								logger.error('error removing states', err);
 								return
 							};
 							addStatesFromConfig(contextEventBusReader, listener, delta.added, function () {});
 						});
 
-					}).then(function () {
-						console.log('finiteStateEngine is listening for state changes for user', user.id);
 					}).catch(function (err) {
-						console.log('error connecting finiteStateEngine for state changes for user', user.id, err);
+						logger.error('error connecting finiteStateEngine for state changes for user', user.id, err);
 					});
 
 					configAccessForUser.getStateConfig().then(function (stateConfig) {
@@ -126,7 +123,6 @@ module.exports = (function () {
 			removed.forEach(function (state) {
 				state.dispose()
 			});
-			console.log('removed ' + removed.length + ' states');
 			callback(null, removed);
 		}
 

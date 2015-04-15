@@ -4,6 +4,7 @@ var getContextEventBusReader = require('../../core/contextEventBusReader');
 var state = require('./lib');
 var registeredUsersAccess = require('../users/client');
 var userConfigurationAccess = require('../../core/userConfigurationAccess');
+var logger = require('../../core/logger');
 
 function createContextEngineForUser(user) {
 	var userId = user.id;
@@ -12,7 +13,6 @@ function createContextEngineForUser(user) {
 	var contextEventBusWriter = getConnectedContextEventBusWriter(userId);
 
 	return new Promise(function (resolve, reject) {
-		console.log('attempting registering state inferene engine for', userId);
 		getContextEventBusReader(userId).then(function (contextEventBusReader) {
 			state.StateInferenceEngine.subscribeToContextEvents(
 				user,
@@ -21,10 +21,10 @@ function createContextEngineForUser(user) {
 				userConfig,
 				function (err) {
 					if (err) {
-						console.log('error registering state inference engine');
+						logger.log('error registering state inference engine');
 						return reject(err);
 					}
-					console.log('registered state inference engine');
+					logger.log('registered state inference engine');
 					resolve(); //kinda weird we dont have anything to return here
 				});
 		});
@@ -46,11 +46,11 @@ function start() {
 }
 
 start().then(function () {
-	console.log('Created finite state machines for all users');
+	logger.log('Created finite state machines for all users');
 	process.send(JSON.stringify({
 		status: "ready"
 	}));
 }).catch(function (err) {
-	console.error('Failed to create all context engines with error ' + err);
+	logger.error('Failed to create all finite state machines with error ' + err);
 	process.exit(1);
 });

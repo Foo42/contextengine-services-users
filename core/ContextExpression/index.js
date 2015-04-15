@@ -1,6 +1,7 @@
 var EventEmitter = require('events').EventEmitter;
 var objectMatches = require('../objectMatches');
 var cron = require('cron');
+var logger = require('../logger');
 
 module.exports = function (contextEventBusReader, stateQueryService) {
 	var createStateExpression = function createStateExpression(specification) {
@@ -17,15 +18,14 @@ module.exports = function (contextEventBusReader, stateQueryService) {
 
 		return {
 			startWatch: function () {
-				console.log('startWatch with spec', specification);
+				logger.log('startWatch with spec', specification);
 				query.startWatch()
 			},
 			stopWatch: function () {
-				console.log('stopWatch with spec', specification);
+				logger.log('stopWatch with spec', specification);
 				query.stopWatch()
 			},
 			on: function (event, callback) {
-				console.log('stateExpression: adding subscriber to event: ' + event);
 				query.on(event, function (newValue) {
 					callback(isDesiredState(newValue));
 				});
@@ -39,7 +39,7 @@ module.exports = function (contextEventBusReader, stateQueryService) {
 	};
 
 	var createEventWatch = function createEventWatch(specification) {
-		console.log('creating event expression with spec ' + JSON.stringify(specification));
+		logger.log('creating event expression with spec ' + JSON.stringify(specification));
 		var expression = new EventEmitter();
 		var isWatching = false;
 
@@ -49,13 +49,11 @@ module.exports = function (contextEventBusReader, stateQueryService) {
 
 		if (specification.eventMatching) {
 			var processEventMatching = function processEventMatching(e) {
-				console.log('processing event', e, 'with spec', specification);
 				if (!isWatching) {
-					console.log('not watching with spec', specification);
 					return;
 				}
 				if (objectMatches(e, specification.eventMatching)) {
-					console.log('triggering ', specification);
+					logger.log('triggering ', specification);
 					triggerEvent();
 				}
 			};
@@ -70,20 +68,17 @@ module.exports = function (contextEventBusReader, stateQueryService) {
 		}
 
 		var handleEvent = function (e) {
-			console.log('event detected');
 			expression.emit('processing event', e);
 		};
 
 		return {
 			startWatch: function () {
 				isWatching = true;
-				console.trace('starting watch');
 				expression.emit('starting watch');
 				contextEventBusReader.on('context event', handleEvent);
 			},
 			stopWatch: function () {
 				isWatching = false;
-				console.trace('stopping watch');
 				expression.emit('stopping watch');
 				contextEventBusReader.removeListener('event', handleEvent);
 			},
@@ -97,10 +92,8 @@ module.exports = function (contextEventBusReader, stateQueryService) {
 		eventWatcher.on('triggered', function (e) {
 			stateCondition.evaluate(function (err, result) {
 				if (result) {
-					console.log('event passed state condition');
 					return eventPropegator.emit('triggered', e);
 				}
-				console.log('event failed state condition');
 			})
 		});
 

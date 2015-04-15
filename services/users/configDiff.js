@@ -1,7 +1,6 @@
 var _ = require('lodash');
 
 module.exports = function (currentConfig, newConfig) {
-	console.log('diffing old', currentConfig.states, 'against new', newConfig.states);
 	var delta = {};
 
 	var getStatesInFirstArrayButNotSecond = function (array1, array2) {

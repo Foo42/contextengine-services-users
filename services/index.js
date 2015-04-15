@@ -1,18 +1,28 @@
 var Promise = require('promise');
 var fork = require('child_process').fork;
 var path = require('path');
+var _ = require('lodash');
 
 process.env.USER_DATA_PATH = process.env.USER_DATA_PATH || path.join(path.dirname(require.main.filename), 'data', 'userSpecific');
 console.log('user data path = ', process.env.USER_DATA_PATH);
 
 var childProcesses = [];
 
-function startService(path) {
+function guessServiceName(path) {
+    var parts = path.split('/');
+    return parts.pop();
+}
+
+function startService(path, serviceName) {
     var fullPath = require.resolve(path);
+    serviceName = serviceName || guessServiceName(path);
     return new Promise(function (resolve, reject) {
-        console.log('starting service:', path);
+        console.log('starting service:', serviceName, path);
         var service = fork(fullPath, {
-            silent: false
+            silent: false,
+            env: _.extend(process.env, {
+                'SERVICE_NAME': serviceName
+            })
         });
         service.on('message', function (msg) {
             console.log('recieved message from ', path, ', assuming ready');

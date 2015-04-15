@@ -99,7 +99,6 @@ describe('State creation', function () {
 			var exitCondition = createFakeEventExpression();
 			var mockExpressionFactory = {
 				createEventExpression: function (spec) {
-					console.log(spec);
 					if (spec.on.someEntryConfig) {
 						return entryCondition;
 					}
@@ -169,9 +168,7 @@ describe('State creation', function () {
 							return expression.watching;
 						}
 						var someExpressionsStillWatching = _.any(eventExpressions, expressionIsWatching);
-						eventExpressions.filter(expressionIsWatching).forEach(function (expression) {
-							console.log(JSON.stringify(expression.spec) + ' still watching')
-						});
+
 						assert.equal(someExpressionsStillWatching, false);
 						done();
 					});
@@ -208,7 +205,6 @@ describe('State creation', function () {
 				if (err) {
 					assert.fail();
 				}
-				console.log(state);
 				assert.ok(state);
 				assert.equal(state.active, expressionValue);
 				done();
@@ -240,7 +236,6 @@ describe('State creation', function () {
 				if (err) {
 					assert.fail();
 				}
-				console.log(state);
 				assert.ok(state);
 				assert.equal(state.active, true);
 

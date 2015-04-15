@@ -1,9 +1,10 @@
 var request = require('request');
 var Promise = require('promise');
+var logger = require('../../core/logger');
 
 module.exports = {
 	getRecentEventsForUser: function (userId) {
-		console.log('processing request to getRecentEventsForUser', userId);
+		logger.log('processing request to getRecentEventsForUser', userId);
 		var url = 'http://localhost:9110/events/recent?userid=' + userId;
 		return new Promise(function (resolve, reject) {
 			request(url, function (err, response, body) {

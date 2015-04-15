@@ -1,4 +1,5 @@
-console.log('Users service starting...');
+var logger = require('../../core/logger');
+logger.log('Users service starting...');
 var http = require('http');
 var express = require('express');
 var registeredUsersAccess = require('./registeredUsers');
@@ -6,8 +7,7 @@ var userConfigurationAccess = require('../../core/userConfigurationAccess');
 var Promise = require('promise');
 var configDiff = require('./configDiff');
 
-var log = console.log.bind(console, 'Users Service:');
-process.once('exit', log.bind(null, 'recieved exit event'));
+process.once('exit', logger.log.bind(logger, 'recieved exit event'));
 
 var configChangePublisher = require('./configNotification').publisher();
 
@@ -22,13 +22,11 @@ app.use(app.router);
 
 app.get('/users', function (req, res) {
 	registeredUsersAccess.getAllRegisteredUsers_().then(function (users) {
-		log(JSON.stringify(users));
 		res.json(users);
 	});
 });
 
 app.get('/emailAddresses/:userEmail', function (req, res) {
-	console.log('looking up user by email', req.params.userEmail);
 	registeredUsersAccess.findUser({
 		emails: [{
 			value: req.params.userEmail
@@ -47,7 +45,7 @@ app.get('/config/:userId/state', function (req, res) {
 	}).getStateConfig(function (err, config) {
 		if (err) {
 			res.send(500).end();
-			return console.log(err);
+			return logger.error(err);
 		}
 		res.json(config);
 	});
@@ -66,15 +64,16 @@ app.post('/config/:userId/state', function (req, res, next) {
 	});
 	configAccess.getStateConfig(function (err, oldConfig) {
 		if (err) {
-			console.error('Error reading user', req.params.userId, 'existing config', err);
+			logger.error('Error reading user', req.params.userId, 'existing config', err);
 			return next(err);
 		}
 		var diff = configDiff(oldConfig, newConfig);
 		configAccess.setStateConfig(newConfig, function (err) {
-			console.log('config file written');
 			if (err) {
+				logger.error('Error writing user state config file for user', req.params.userId);
 				return res.send(400).end();
 			}
+			logger.log('user state config file written for user', req.params.userId);
 			res.send(201).end();
 			configChangePublisher.then(function (publisher) {
 				publisher.publishConfigChangeForUser(req.params.userId, {
