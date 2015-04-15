@@ -6,10 +6,13 @@ var EventEmitter = require('events').EventEmitter;
 var _ = require('lodash');
 var logger = require('../logger');
 
+var baseUserDataPath = (process.env.USER_DATA_PATH || path.join(path.dirname(require.main.filename), 'data', 'userSpecific'));
+logger.log('USER_DATA_PATH =', process.env.USER_DATA_PATH);
+logger.log('baseUserDataPath =', baseUserDataPath);
+
 module.exports = {
 	forUser: function (user) {
 		logger.log('looking up user config for user ' + user.id);
-		var baseUserDataPath = (process.env.USER_DATA_PATH || path.join(path.dirname(require.main.filename), 'data', 'userSpecific'));
 		var userDataPath = path.join(baseUserDataPath, user.id);
 		var userConfigPath = path.join(userDataPath, 'config');
 		var stateConfigPath = path.join(userConfigPath, 'stateConfig.json');

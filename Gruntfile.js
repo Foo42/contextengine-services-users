@@ -1,10 +1,11 @@
 module.exports = function (grunt) {
-
+  var path = require('path');
   // Add the grunt-mocha-test tasks.
   grunt.loadNpmTasks('grunt-mocha-test');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-notify');
   grunt.loadNpmTasks('grunt-mocha');
+  grunt.loadNpmTasks('grunt-contrib-copy');
 
   grunt.initConfig({
     // Configure a mochaTest task
@@ -42,10 +43,23 @@ module.exports = function (grunt) {
         tasks: ['quickFeedback'],
       },
     },
+    copy: {
+      testData: {
+        files: [{
+          expand: true,
+          cwd: 'test/fixtureData',
+          src: ['**'],
+          dest: 'test/data/'
+        }, ],
+      },
+    }
   });
 
+  console.log('GRUNT:', 'USER_DATA_PATH', path.join(__dirname, 'test', 'data'));
   grunt.registerTask('unitTest', ['mochaTest:unit']);
-  grunt.registerTask('quickFeedback', ['mochaTest']);
-  grunt.registerTask('default', ['quickFeedback']);
+  grunt.registerTask('systemTest', ['copy:testData', 'mochaTest:smoke']);
+  grunt.registerTask('test', ['unitTest', 'systemTest']);
+  grunt.registerTask('quickFeedback', ['unitTest']);
+  grunt.registerTask('default', ['test']);
 
 };

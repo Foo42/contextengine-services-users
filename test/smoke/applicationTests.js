@@ -16,7 +16,7 @@ describe('application', function () {
 		var childEnv = {};
 		childEnv.OFFLINE_MODE = true;
 		childEnv.RABBITMQ_HOST = 'localdocker';
-		childEnv.USER_DATA_PATH = path.join(__dirname, '../../data/userSpecific');
+		childEnv.USER_DATA_PATH = path.join(__dirname, '../data/userSpecific');
 		child = fork('./index.js', {
 			env: childEnv,
 			silent: false
