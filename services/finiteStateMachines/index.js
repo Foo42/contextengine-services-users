@@ -5,6 +5,7 @@ var state = require('./lib');
 var registeredUsersAccess = require('../users/client');
 var userConfigurationAccess = require('../../core/userConfigurationAccess');
 var logger = require('../../core/logger');
+var httpInterface = require('./httpInterface');
 
 function createContextEngineForUser(user) {
 	var userId = user.id;
@@ -50,7 +51,7 @@ start().then(function () {
 	process.send(JSON.stringify({
 		status: "ready"
 	}));
-}).catch(function (err) {
+}).then(httpInterface.start()).catch(function (err) {
 	logger.error('Failed to create all finite state machines with error ' + err);
 	process.exit(1);
 });

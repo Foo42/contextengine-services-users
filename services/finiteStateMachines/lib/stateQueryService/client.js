@@ -1,13 +1,9 @@
+var Promise = require('bluebird');
 var request = require('request');
-var Promise = require('promise');
-var logger = require('../../core/logger');
-
-var host = 'http://localhost:' + (process.env.HISTORICAL_EVENT_SERVICE_PORT || 9110);
 
 module.exports = {
-	getRecentEventsForUser: function (userId) {
-		logger.log('processing request to getRecentEventsForUser', userId);
-		var url = host + '/events/recent?userid=' + userId;
+	getStatesForUser:function(userId){
+		var url = 'http://localhost:9111/states/active?userid=' + userId;
 		return new Promise(function (resolve, reject) {
 			request(url, function (err, response, body) {
 				if (err) {

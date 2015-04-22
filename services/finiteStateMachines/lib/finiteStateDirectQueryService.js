@@ -1,3 +1,4 @@
+var logger = require('../../../core/logger');
 var registeredStateAccessFunctions = {}
 
 var temporaryImplementionBeforeWeHaveDiscreteServices = {
@@ -5,7 +6,7 @@ var temporaryImplementionBeforeWeHaveDiscreteServices = {
 		registeredStateAccessFunctions[userId] = f;
 	},
 	getStatesForUser: function (userId, callback) {
-		f = registerStateAccessFunction[userId];
+		f = registeredStateAccessFunctions[userId];
 		if (f === undefined) {
 			return callback(new Error('unknown user'));
 		}

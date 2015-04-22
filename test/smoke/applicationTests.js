@@ -78,9 +78,9 @@ describe('application', function () {
 		});
 	});
 
-	it('simple test to ensure service exited correctly between tests', function (done) {
+	it.only('should allow querying of active states', function (done) {
 		request.get({
-			url: host + '/'
+			url: host + '/states/active'
 		}, function (err, response, body) {
 			assert.ifError(err);
 			assert.equal(response.statusCode, 200);

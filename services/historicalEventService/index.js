@@ -28,7 +28,7 @@ app.get('/events/recent', function (request, response) {
 		return response.status(400).end();
 	}
 
-	response.send(JSON.stringify(recentEvents[userId]));
+	response.send(JSON.stringify(recentEvents[userId] || []));
 });
 
 function processIncomingContextEvent(event) {
