@@ -5,6 +5,8 @@ var createHash = crypto.createHash.bind(crypto, 'sha1');
 var EventEmitter = require('events').EventEmitter;
 var _ = require('lodash');
 var logger = require('../logger');
+var Promise = require('bluebird');
+var mkdir = Promise.promisify(require('mkdirp'));
 
 var baseUserDataPath = (process.env.USER_DATA_PATH || path.join(path.dirname(require.main.filename), 'data', 'userSpecific'));
 logger.log('USER_DATA_PATH =', process.env.USER_DATA_PATH);
@@ -47,15 +49,21 @@ module.exports = {
 			fs.readFile(stateConfigPath, function (err, fileContent) {
 				if (err && err.code == 'ENOENT') {
 					logger.log('User', user.id, 'has no config file. Creating it at', stateConfigPath);
-					fileContent = '{"states":[]}'
-					fs.writeFile(stateConfigPath, fileContent, function (err) {
-						if (err) {
-							return done(err);
-						}
+					mkdir(userConfigPath).then(function () {
+						fileContent = '{"states":[]}'
+						fs.writeFile(stateConfigPath, fileContent, function (err) {
+							if (err) {
+								logger.error('Error creating state config file for user at', stateConfigPath);
+								return done(err);
+							}
 
-						logger.log('User', user.id, 'config file created at', stateConfigPath);
-						done(null, createStateConfigFromJSONString(fileContent));
+							logger.log('User', user.id, 'config file created at', stateConfigPath);
+							done(null, createStateConfigFromJSONString(fileContent));
+						});
+					}).catch(function (err) {
+						logger.error('Error creating state config directory for user at', userConfigPath);
 					});
+
 				} else {
 					if (err) {
 						logger.error('Unexpected error reading user config file for user', user.id, 'at path', userConfigPath, ':', err);

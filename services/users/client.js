@@ -20,7 +20,7 @@ var client = {
 	},
 	isRegisteredUser: function (user) {
 		return new Promise(function (resolve, reject) {
-			var url = 'http://localhost:9120/emailAddresses/' + encodeURIComponent(user.emails[0]);
+			var url = 'http://localhost:9120/emailAddresses/' + encodeURIComponent(user.emails[0].value);
 
 			request(url, function (err, response, body) {
 				if (err) {

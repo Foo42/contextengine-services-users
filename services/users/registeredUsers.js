@@ -1,27 +1,21 @@
 var logger = require('../../core/logger');
 var _ = require('lodash');
-var Promise = require('promise');
-var fs = require('fs');
+var Promise = require('bluebird');
+var fs = Promise.promisifyAll(require('fs'));
 var file = __dirname + '/../../data/users.json';
 var users;
 
-var loadUsersFromFile = function loadUsersFromFile(done) {
+var loadUsersFromFile = function loadUsersFromFile() {
 	if (users) {
-		return done(null, users);
+		return Promise.resolve(users);
 	}
 
-	//Todo: promisify this to protect against json parse errors apart from anything else
-	fs.readFile(file, 'utf8', function (err, data) {
-		if (!err) {
-			users = JSON.parse(data);
-			logger.info(users.length + ' users loaded from file');
-		} else {
-			logger.error('Error loading users file');
-		}
-		return done(err, users);
+	return fs.readFileAsync(file, 'utf8').then(function (data) {
+		users = JSON.parse(data);
+		logger.info(users.length + ' users loaded from file');
+		return users;
 	});
 };
-var loadUsersFromFile_ = Promise.denodeify(loadUsersFromFile);
 
 var userHasEmailAddressOf = function (user, address) {
 	return user.emails.filter(function (email) {
@@ -31,7 +25,7 @@ var userHasEmailAddressOf = function (user, address) {
 
 module.exports = {
 	findUser: function (user, done) {
-		loadUsersFromFile_.then(function (users) {
+		loadUsersFromFile().then(function (users) {
 			var foundUser = _.any(users, function (registeredUser) {
 				return userHasEmailAddressOf(user, registeredUser.emailAddress);
 			});
@@ -41,9 +35,11 @@ module.exports = {
 			} else {
 				done(null, user);
 			}
+		}).catch(function (err) {
+			logger.error('Promblem loading users from file', err);
 		});
 	},
 
 	getAllRegisteredUsers: loadUsersFromFile,
-	getAllRegisteredUsers_: loadUsersFromFile_
+	getAllRegisteredUsers_: loadUsersFromFile
 }

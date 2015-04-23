@@ -44,6 +44,7 @@ http.createServer(app).listen(app.get('port'), function () {
 	logger.log('server listening on port ' + app.get('port'));
 	logger.log('loading registered users');
 	registeredUsersAccess.getAllRegisteredUsers().then(function (users) {
+		logger.log('got all registered users');
 		var gettingBusAccessForEachUser = users
 			.map(function (user) {
 				return user.id
@@ -52,7 +53,6 @@ http.createServer(app).listen(app.get('port'), function () {
 		gettingBusAccessForEachUser.forEach(function (contextEventEmitterPromise) {
 			contextEventEmitterPromise.then(function (contextEventEmitter) {
 				logger.log('subscribing to context events from ', contextEventEmitter.userId);
-				recentEvents[contextEventEmitter.userId] = [];
 				contextEventEmitter.on('context event', processIncomingContextEvent);
 			}).catch(function (err) {
 				logger.error('Error getting context bus access for user', err);

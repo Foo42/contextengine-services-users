@@ -1,26 +1,33 @@
+var path = require('path');
 var logger = require('../../core/logger');
+var inspect = require('util').inspect;
+
 var initialise = function () {
 	var passport = require('passport');
 	var userAccess = require('../users/client');
 	var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
 	var hostName = process.env['HOST_NAME'];
-	var clientSecret = process.env['GOOGLE_CLIENT_SECRET'];
-	var clientID = process.env['GOOGLE_CLIENT_ID'];
+
+	var authConfig = {
+		client_secret: process.env['GOOGLE_CLIENT_SECRET'],
+		client_id: process.env['GOOGLE_CLIENT_ID']
+	};
+	if (process.env['GOOGLE_AUTH_CONFIG_PATH']) {
+		var fullPath = path.join(process.cwd(), process.env['GOOGLE_AUTH_CONFIG_PATH'])
+		authConfig = require(fullPath).web;
+	}
 
 	passport.serializeUser(function (user, done) {
-		logger.log('in serializeUser. user = ' + JSON.stringify(user));
 		done(null, user);
 	});
 
 	passport.deserializeUser(function (obj, done) {
-		//attach context engine here?
-		logger.log("deserializeUser: " + JSON.stringify(obj));
 		done(null, obj);
 	});
 
 	passport.use(new GoogleStrategy({
-			clientID: clientID,
-			clientSecret: clientSecret,
+			clientID: authConfig.client_id,
+			clientSecret: authConfig.client_secret,
 			callbackURL: "http://" + hostName + "/auth/google/callback"
 		},
 		function (accessToken, refreshToken, profile, done) {
@@ -39,7 +46,6 @@ var initialise = function () {
 				res.send(500).end();
 			});
 		} else {
-			logger.log('isAuthenticated failed');
 			res.redirect('/login');
 		}
 	};

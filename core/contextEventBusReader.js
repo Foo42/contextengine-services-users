@@ -36,7 +36,7 @@ var queueConnected = rabbitPie.connect().then(function (conn) {
 });
 
 queueConnected.catch(function (err) {
-	logger.error('badness connecting event bus reader', err);
+	logger.error('Error connecting event bus reader', err);
 	process.exit(1);
 });
 
