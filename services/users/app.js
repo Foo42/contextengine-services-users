@@ -21,7 +21,7 @@ app.use(express.methodOverride());
 app.use(app.router);
 
 app.get('/users', function (req, res) {
-	registeredUsersAccess.getAllRegisteredUsers_().then(function (users) {
+	registeredUsersAccess.getAllRegisteredUsers().then(function (users) {
 		res.json(users);
 	});
 });

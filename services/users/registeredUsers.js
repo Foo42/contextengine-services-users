@@ -40,6 +40,5 @@ module.exports = {
 		});
 	},
 
-	getAllRegisteredUsers: loadUsersFromFile,
-	getAllRegisteredUsers_: loadUsersFromFile
+	getAllRegisteredUsers: loadUsersFromFile
 }
