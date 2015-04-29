@@ -3,6 +3,7 @@ var fork = require('child_process').fork;
 var path = require('path');
 var _ = require('lodash');
 
+process.env.RABBITMQ_HOST = process.env.RABBITMQ_HOST || 'rabbitmq';
 process.env.USER_DATA_PATH = process.env.USER_DATA_PATH || path.join(path.dirname(require.main.filename), 'data', 'userSpecific');
 console.log('user data path = ', process.env.USER_DATA_PATH);
 

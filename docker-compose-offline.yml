@@ -1,0 +1,17 @@
+contextengine:
+  build: .
+  links:
+    - rabbitmq
+  ports:
+    - "9005:9005"
+  environment:
+    - OFFLINE_MODE=true
+
+rabbitmq:
+  image: tutum/rabbitmq
+  ports:
+    - "5672:5672"
+    - "15672:15672"
+  environment:
+    - RABBITMQ_PASS=admin
+
