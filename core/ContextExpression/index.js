@@ -101,6 +101,9 @@ module.exports = function (contextEventBusReader, stateQueryService) {
 			startWatch: function () {
 				eventWatcher.startWatch();
 			},
+			stopWatch: function(){
+				eventWatcher.stopWatch();
+			},
 			on: eventPropegator.on.bind(eventPropegator),
 		}
 	}

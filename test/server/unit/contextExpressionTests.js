@@ -325,6 +325,36 @@ describe('Context expressions', function () {
 					text: 'foo'
 				});
 			});
+
+			it('should not raise events when stop watch has been called', function (done) {
+				this.timeout(500);
+				setTimeout(done, 300); //if fail callback not called, the test passes
+
+				var specification = {
+					on: {
+						eventMatching: {
+							text: 'foo'
+						}
+					},
+					whilst: {
+						isNotActive: 'Monday'
+					}
+				};
+
+				setState('Monday', false);
+
+				var expression = ContextExpression.createEventExpression(specification);
+				expression.startWatch();
+				expression.stopWatch();
+
+				expression.on('trigger', function () {
+					assert.fail();
+				});
+
+				eventBus.emit('context event', {
+					text: 'foo'
+				});
+			});
 		});
 	});
 
