@@ -1,6 +1,6 @@
-var filtr = require('filtr');
+var sift = require('sift');
 
 module.exports = function(object, conditions){
-	var query = filtr(conditions);
-	return query.test([object]).length > 0;			
+	var query = sift(conditions);
+	return query(object);			
 }
