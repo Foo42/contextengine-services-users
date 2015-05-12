@@ -33,7 +33,7 @@ var createRule = function (config, expressionFactory) {
 	}
 
 	if (config.isActive) {
-		establishingLiveExpressions.push(expressionFactory.createStateExpression_(config.isActive).then(function(stateExpression){
+		establishingLiveExpressions.push(expressionFactory.createStateExpression(config.isActive).then(function(stateExpression){
 			stateExpression.on('valueChanged', function (newValue) {
 				newValue ? activate() : deactivate();
 			});
@@ -54,7 +54,7 @@ var createRule = function (config, expressionFactory) {
 		}));
 	} else if (config.enter || config.exit) {
 		if (config.enter) {
-			establishingLiveExpressions.push(expressionFactory.createEventExpression_(config.enter).then(function(entryExpression){
+			establishingLiveExpressions.push(expressionFactory.createEventExpression(config.enter).then(function(entryExpression){
 				state.on('activated', function () {
 					entryExpression.stopWatch();
 				});
@@ -75,7 +75,7 @@ var createRule = function (config, expressionFactory) {
 		}
 
 		if (config.exit) {
-			establishingLiveExpressions.push(expressionFactory.createEventExpression_(config.exit).then(function(exitExpression){
+			establishingLiveExpressions.push(expressionFactory.createEventExpression(config.exit).then(function(exitExpression){
 				state.on('deactivated', function () {
 					exitExpression.stopWatch();
 				});

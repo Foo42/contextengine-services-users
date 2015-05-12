@@ -8,7 +8,7 @@ describe('State creation', function () {
 	var fakeStateExpression;
 
 	var mockExpressionFactory = {
-		createStateExpression_: function (config) {
+		createStateExpression: function (config) {
 			return Promise.resolve(fakeStateExpression);
 		}
 	};
@@ -47,7 +47,7 @@ describe('State creation', function () {
 			fakeEventExpression.startWatch = function () {};
 			fakeEventExpression.stopWatch = function () {};
 			var mockExpressionFactory = {
-				createEventExpression_: function (spec) {
+				createEventExpression: function (spec) {
 					return Promise.resolve(fakeEventExpression);
 				}
 			};
@@ -96,7 +96,7 @@ describe('State creation', function () {
 			var entryCondition = createFakeEventExpression();
 			var exitCondition = createFakeEventExpression();
 			var mockExpressionFactory = {
-				createEventExpression_: function (spec) {
+				createEventExpression: function (spec) {
 					if (spec.on.someEntryConfig) {
 						return Promise.resolve(entryCondition);
 					}
@@ -148,7 +148,7 @@ describe('State creation', function () {
 
 					var eventExpressions = [];
 					var mockExpressionFactory = {
-						createEventExpression_: function (spec) {
+						createEventExpression: function (spec) {
 							var fakeExpression = createFakeEventExpression();
 							fakeExpression.spec = spec;
 							eventExpressions.push(fakeExpression);

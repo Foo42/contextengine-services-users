@@ -123,10 +123,10 @@ module.exports = function (contextEventBusReader, stateQueryService) {
 	}
 
 	return {
-		createEventExpression_: function(specification){
+		createEventExpression: function(specification){
 			return Promise.resolve(createEventExpressionSync(specification))
 		},
-		createStateExpression_: function(specification){
+		createStateExpression: function(specification){
 			return Promise.resolve(createStateExpressionSync(specification))
 		}
 	}

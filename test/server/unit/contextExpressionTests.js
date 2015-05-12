@@ -73,7 +73,7 @@ describe('Context expressions', function () {
 
 			setState('Monday', false);
 
-			ContextExpression.createStateExpression_(specification).then(function(expression){
+			ContextExpression.createStateExpression(specification).then(function(expression){
 				expression.startWatch();
 
 				expression.on('valueChanged', function (isActive) {
@@ -94,7 +94,7 @@ describe('Context expressions', function () {
 
 			setState('Monday', true);
 
-			ContextExpression.createStateExpression_(specification).then(function(expression){
+			ContextExpression.createStateExpression(specification).then(function(expression){
 				expression.startWatch();
 
 				expression.on('valueChanged', function (isActive) {
@@ -115,7 +115,7 @@ describe('Context expressions', function () {
 
 			setState('Monday', false);
 
-			ContextExpression.createStateExpression_(specification).then(function(expression){
+			ContextExpression.createStateExpression(specification).then(function(expression){
 				expression.startWatch();
 
 				setTimeout(function () {
@@ -141,7 +141,7 @@ describe('Context expressions', function () {
 
 			setState('Monday', false);
 
-			ContextExpression.createStateExpression_(specification).then(function(expression){
+			ContextExpression.createStateExpression(specification).then(function(expression){
 				expression.startWatch();
 				expression.stopWatch();
 
@@ -173,7 +173,7 @@ describe('Context expressions', function () {
 					}
 				};
 
-				ContextExpression.createEventExpression_(specification).then(function(expression){
+				ContextExpression.createEventExpression(specification).then(function(expression){
 					expression.startWatch();
 
 					expression.on('triggered', function () {
@@ -197,7 +197,7 @@ describe('Context expressions', function () {
 					}
 				};
 
-				ContextExpression.createEventExpression_(specification).then(function(expression){
+				ContextExpression.createEventExpression(specification).then(function(expression){
 					expression.on('triggered', function () {
 						if (!shouldBeRaisingEvents) {
 							assert.fail();
@@ -258,7 +258,7 @@ describe('Context expressions', function () {
 
 					ContextExpression = proxyquire('../../../core/ContextExpression', fakes)(eventBus, stateQueryService);
 
-					ContextExpression.createEventExpression_(specification).then(function(expression){
+					ContextExpression.createEventExpression(specification).then(function(expression){
 						expression.startWatch();
 						assert.ok(fakeCronJob.started);
 
@@ -288,7 +288,7 @@ describe('Context expressions', function () {
 				};
 
 				setState('Monday', true);
-				ContextExpression.createEventExpression_(specification).then(function(expression){
+				ContextExpression.createEventExpression(specification).then(function(expression){
 					expression.startWatch();
 
 					expression.on('triggered', function () {
@@ -318,7 +318,7 @@ describe('Context expressions', function () {
 
 				setState('Monday', true);
 
-				ContextExpression.createEventExpression_(specification).then(function(expression){
+				ContextExpression.createEventExpression(specification).then(function(expression){
 					expression.startWatch();
 
 					expression.on('trigger', function () {
@@ -348,7 +348,7 @@ describe('Context expressions', function () {
 
 				setState('Monday', false);
 
-				ContextExpression.createEventExpression_(specification).then(function(expression){
+				ContextExpression.createEventExpression(specification).then(function(expression){
 					expression.startWatch();
 					expression.stopWatch();
 
