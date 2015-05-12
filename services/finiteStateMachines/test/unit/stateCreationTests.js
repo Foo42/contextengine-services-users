@@ -1,4 +1,5 @@
-var assert = require("assert");
+var assert = require('assert');
+var Promise = require('bluebird');
 var binaryState = require('../../lib').binaryState;
 var EventEmitter = require('events').EventEmitter;
 var _ = require('lodash');
@@ -7,8 +8,8 @@ describe('State creation', function () {
 	var fakeStateExpression;
 
 	var mockExpressionFactory = {
-		createStateExpression: function (config) {
-			return fakeStateExpression;
+		createStateExpression_: function (config) {
+			return Promise.resolve(fakeStateExpression);
 		}
 	};
 
@@ -17,7 +18,7 @@ describe('State creation', function () {
 			var mockExpressionFactory = {};
 			binaryState.createRule({
 				name: 'bob'
-			}, mockExpressionFactory, function (err, state) {
+			}, mockExpressionFactory).then(function (state) {
 				assert.equal(state.name, 'bob');
 				done();
 			});
@@ -26,7 +27,7 @@ describe('State creation', function () {
 			var mockExpressionFactory = {};
 			binaryState.createRule({
 				sha: '12345ABCDEF'
-			}, mockExpressionFactory, function (err, state) {
+			}, mockExpressionFactory).then(function (state) {
 				assert.equal(state.sha, '12345ABCDEF');
 				done();
 			});
@@ -46,15 +47,12 @@ describe('State creation', function () {
 			fakeEventExpression.startWatch = function () {};
 			fakeEventExpression.stopWatch = function () {};
 			var mockExpressionFactory = {
-				createEventExpression: function (spec) {
-					return fakeEventExpression;
+				createEventExpression_: function (spec) {
+					return Promise.resolve(fakeEventExpression);
 				}
 			};
 
-			binaryState.createRule(specification, mockExpressionFactory, function (err, state) {
-				if (err) {
-					assert.fail();
-				}
+			binaryState.createRule(specification, mockExpressionFactory).then(function(state) {
 				assert.ok(state);
 				assert.equal(state.active, false);
 
@@ -64,7 +62,7 @@ describe('State creation', function () {
 				});
 
 				fakeEventExpression.emit('triggered');
-			});
+			}).catch(done);
 		});
 
 		it('should stop watching entry condition when active, and start watching exit', function (done) {
@@ -98,22 +96,18 @@ describe('State creation', function () {
 			var entryCondition = createFakeEventExpression();
 			var exitCondition = createFakeEventExpression();
 			var mockExpressionFactory = {
-				createEventExpression: function (spec) {
+				createEventExpression_: function (spec) {
 					if (spec.on.someEntryConfig) {
-						return entryCondition;
+						return Promise.resolve(entryCondition);
 					}
 					if (spec.on.someExitConfig) {
-						return exitCondition;
+						return Promise.resolve(exitCondition);
 					}
 					assert.fail();
 				}
 			};
 
-			binaryState.createRule(specification, mockExpressionFactory, function (err, state) {
-				if (err || !state) {
-					assert.fail();
-				}
-
+			binaryState.createRule(specification, mockExpressionFactory).then(function (state) {
 				assert.ok(entryCondition.startCalled);
 
 				state.on('activated', function () {
@@ -123,7 +117,7 @@ describe('State creation', function () {
 				});
 
 				entryCondition.forceTrigger();
-			});
+			}).catch(done);
 
 			describe("disposing states with entry and exit conditions", function () {
 				it('should ensure any event expressions have their watches stopped', function (done) {
@@ -154,15 +148,15 @@ describe('State creation', function () {
 
 					var eventExpressions = [];
 					var mockExpressionFactory = {
-						createEventExpression: function (spec) {
+						createEventExpression_: function (spec) {
 							var fakeExpression = createFakeEventExpression();
 							fakeExpression.spec = spec;
 							eventExpressions.push(fakeExpression);
-							return fakeExpression;
+							return Promise.resolve(fakeExpression);
 						}
 					};
 
-					binaryState.createRule(specification, mockExpressionFactory, function (err, state) {
+					binaryState.createRule(specification, mockExpressionFactory).then(function (state) {
 						state.dispose();
 						var expressionIsWatching = function expressionIsWatching(expression) {
 							return expression.watching;
@@ -171,7 +165,7 @@ describe('State creation', function () {
 
 						assert.equal(someExpressionsStillWatching, false);
 						done();
-					});
+					}).catch(done);
 				});
 			});
 		});
@@ -201,14 +195,11 @@ describe('State creation', function () {
 				}
 			};
 
-			binaryState.createRule(specification, mockExpressionFactory, function (err, state) {
-				if (err) {
-					assert.fail();
-				}
+			binaryState.createRule(specification, mockExpressionFactory).then(function (state) {
 				assert.ok(state);
 				assert.equal(state.active, expressionValue);
 				done();
-			});
+			}).catch(done);
 		});
 
 		it('should update its active state when the stateExpression changes its value', function (done) {
@@ -232,10 +223,7 @@ describe('State creation', function () {
 				}
 			};
 
-			binaryState.createRule(specification, mockExpressionFactory, function (err, state) {
-				if (err) {
-					assert.fail();
-				}
+			binaryState.createRule(specification, mockExpressionFactory).then(function (state) {
 				assert.ok(state);
 				assert.equal(state.active, true);
 
@@ -248,7 +236,7 @@ describe('State creation', function () {
 				expressionValue = false;
 				fakeStateExpression.emit('valueChanged', expressionValue);
 
-			});
+			}).catch(done);
 		});
 	});
 
@@ -274,12 +262,9 @@ describe('State creation', function () {
 				}
 			};
 
-			binaryState.createRule(specification, mockExpressionFactory, function (err, state) {
-				if (err) {
-					assert.fail();
-				}
+			binaryState.createRule(specification, mockExpressionFactory).then(function (state) {
 				state.dispose();
-			});
+			}).catch(done);
 		});
 	});
 });

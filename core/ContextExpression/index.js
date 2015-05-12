@@ -1,10 +1,12 @@
 var EventEmitter = require('events').EventEmitter;
+var Promise = require('bluebird');
 var objectMatches = require('../objectMatches');
 var cron = require('cron');
 var logger = require('../logger');
 
 module.exports = function (contextEventBusReader, stateQueryService) {
-	var createStateExpression = function createStateExpression(specification) {
+	var createStateExpressionSync = function createStateExpressionSync(specification) {
+		specification = specification.whilst || specification; 
 		var stateName = specification.isActive || specification.isNotActive;
 
 		var isDesiredState = function (stateActiveState) {
@@ -108,20 +110,24 @@ module.exports = function (contextEventBusReader, stateQueryService) {
 		}
 	}
 
+	function createEventExpressionSync(specification){
+		var eventSpec = specification.on || specification;
+		eventWatcher = createEventWatch(eventSpec);
+
+		if (!specification.whilst) {
+			return eventWatcher;
+		}
+
+		var stateCondition = createStateExpressionSync(specification.whilst);
+		return createStateConditionalEventWatcher(eventWatcher, stateCondition);
+	}
+
 	return {
-		createEventExpression: function createEventExpression(specification) {
-			var eventSpec = specification.on || specification;
-			eventWatcher = createEventWatch(eventSpec);
-
-			if (!specification.whilst) {
-				return eventWatcher;
-			}
-
-			var stateCondition = createStateExpression(specification.whilst);
-			return createStateConditionalEventWatcher(eventWatcher, stateCondition);
+		createEventExpression_: function(specification){
+			return Promise.resolve(createEventExpressionSync(specification))
 		},
-		createStateExpression: function (specification) {
-			return createStateExpression(specification.whilst);
+		createStateExpression_: function(specification){
+			return Promise.resolve(createStateExpressionSync(specification))
 		}
 	}
 }

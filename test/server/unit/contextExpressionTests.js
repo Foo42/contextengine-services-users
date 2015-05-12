@@ -63,8 +63,6 @@ describe('Context expressions', function () {
 		ContextExpression = require('../../../core/ContextExpression')(eventBus, stateQueryService);
 	});
 
-
-
 	describe('simple state expressions', function () {
 		it('should raise true event when state defined in isActive clause becomes active', function (done) {
 			var specification = {
@@ -75,15 +73,16 @@ describe('Context expressions', function () {
 
 			setState('Monday', false);
 
-			var expression = ContextExpression.createStateExpression(specification);
-			expression.startWatch();
+			ContextExpression.createStateExpression_(specification).then(function(expression){
+				expression.startWatch();
 
-			expression.on('valueChanged', function (isActive) {
-				assert.equal(isActive, true);
-				done();
-			});
+				expression.on('valueChanged', function (isActive) {
+					assert.equal(isActive, true);
+					done();
+				});
 
-			setState('Monday', true);
+				setState('Monday', true);	
+			}).catch(done);
 		});
 
 		it('should raise true event when state defined in isNotActive clause becomes not active', function (done) {
@@ -95,15 +94,16 @@ describe('Context expressions', function () {
 
 			setState('Monday', true);
 
-			var expression = ContextExpression.createStateExpression(specification);
-			expression.startWatch();
+			ContextExpression.createStateExpression_(specification).then(function(expression){
+				expression.startWatch();
 
-			expression.on('valueChanged', function (isActive) {
-				assert.equal(isActive, true);
-				done();
-			});
+				expression.on('valueChanged', function (isActive) {
+					assert.equal(isActive, true);
+					done();
+				});
 
-			setState('Monday', false);
+				setState('Monday', false);
+			}).catch(done);
 		});
 
 		it('should raise events if expression becomes true', function (done) {
@@ -115,20 +115,21 @@ describe('Context expressions', function () {
 
 			setState('Monday', false);
 
-			var expression = ContextExpression.createStateExpression(specification);
-			expression.startWatch();
+			ContextExpression.createStateExpression_(specification).then(function(expression){
+				expression.startWatch();
 
-			setTimeout(function () {
-				setState('Monday', true);
-			}, 300);
+				setTimeout(function () {
+					setState('Monday', true);
+				}, 300);
 
 
-			expression.on('valueChanged', function (isActive) {
-				//We dont mind if this triggers with false first, only that it becomes true
-				if (isActive) {
-					done();
-				}
-			});
+				expression.on('valueChanged', function (isActive) {
+					//We dont mind if this triggers with false first, only that it becomes true
+					if (isActive) {
+						done();
+					}
+				});
+			}).catch(done);
 		});
 
 		it('should not raise events when stop watch has been called', function (done) {
@@ -140,19 +141,20 @@ describe('Context expressions', function () {
 
 			setState('Monday', false);
 
-			var expression = ContextExpression.createStateExpression(specification);
-			expression.startWatch();
-			expression.stopWatch();
+			ContextExpression.createStateExpression_(specification).then(function(expression){
+				expression.startWatch();
+				expression.stopWatch();
 
-			setTimeout(function () {
-				setState('Monday', true);
-				setTimeout(done, 100);
-			}, 300);
+				setTimeout(function () {
+					setState('Monday', true);
+					setTimeout(done, 100);
+				}, 300);
 
 
-			expression.on('valueChanged', function (isActive) {
-				assert.fail();
-			});
+				expression.on('valueChanged', function (isActive) {
+					assert.fail();
+				});
+			}).catch(done);
 		});
 
 		it('should not raise events when watch stopped', function () {
@@ -171,16 +173,17 @@ describe('Context expressions', function () {
 					}
 				};
 
-				var expression = ContextExpression.createEventExpression(specification);
-				expression.startWatch();
+				ContextExpression.createEventExpression_(specification).then(function(expression){
+					expression.startWatch();
 
-				expression.on('triggered', function () {
-					done();
-				});
+					expression.on('triggered', function () {
+						done();
+					});
 
-				eventBus.emit('context event', {
-					text: 'foo'
-				});
+					eventBus.emit('context event', {
+						text: 'foo'
+					});
+				}).catch(done);
 			});
 
 			it('should not raise events when stopWatch has been called', function (done) {
@@ -194,34 +197,34 @@ describe('Context expressions', function () {
 					}
 				};
 
-				var expression = ContextExpression.createEventExpression(specification);
+				ContextExpression.createEventExpression_(specification).then(function(expression){
+					expression.on('triggered', function () {
+						if (!shouldBeRaisingEvents) {
+							assert.fail();
+						}
+					});
 
-				expression.on('triggered', function () {
-					if (!shouldBeRaisingEvents) {
-						assert.fail();
-					}
-				});
+					eventBus.emit('context event', {
+						text: 'foo'
+					});
 
-				eventBus.emit('context event', {
-					text: 'foo'
-				});
+					expression.startWatch();
+					shouldBeRaisingEvents = true;
 
-				expression.startWatch();
-				shouldBeRaisingEvents = true;
+					eventBus.emit('context event', {
+						text: 'foo'
+					});
 
-				eventBus.emit('context event', {
-					text: 'foo'
-				});
+					expression.stopWatch();
+					shouldBeRaisingEvents = false;
 
-				expression.stopWatch();
-				shouldBeRaisingEvents = false;
-
-				eventBus.emit('context event', {
-					text: 'foo'
-				});
+					eventBus.emit('context event', {
+						text: 'foo'
+					});
 
 
-				done();
+					done();
+				}).catch(done);
 
 			});
 
@@ -255,18 +258,18 @@ describe('Context expressions', function () {
 
 					ContextExpression = proxyquire('../../../core/ContextExpression', fakes)(eventBus, stateQueryService);
 
-					var expression = ContextExpression.createEventExpression(specification);
+					ContextExpression.createEventExpression_(specification).then(function(expression){
+						expression.startWatch();
+						assert.ok(fakeCronJob.started);
 
-					expression.startWatch();
-					assert.ok(fakeCronJob.started);
+						expression.on('triggered', function () {
+							expression.stopWatch();
+							assert.equal(fakeCronJob.started, false);
+							done();
+						});
 
-					expression.on('triggered', function () {
-						expression.stopWatch();
-						assert.equal(fakeCronJob.started, false);
-						done();
-					});
-
-					fakeCronJob.fire();
+						fakeCronJob.fire();
+					}).catch(done);
 				});
 			});
 		});
@@ -285,16 +288,17 @@ describe('Context expressions', function () {
 				};
 
 				setState('Monday', true);
-				var expression = ContextExpression.createEventExpression(specification);
-				expression.startWatch();
+				ContextExpression.createEventExpression_(specification).then(function(expression){
+					expression.startWatch();
 
-				expression.on('triggered', function () {
-					done();
-				});
+					expression.on('triggered', function () {
+						done();
+					});
 
-				eventBus.emit('context event', {
-					text: 'foo'
-				});
+					eventBus.emit('context event', {
+						text: 'foo'
+					});
+				}).catch(done);
 			});
 
 			it('should not raise event when event described in expression fires and state clause is not met', function (done) {
@@ -314,16 +318,17 @@ describe('Context expressions', function () {
 
 				setState('Monday', true);
 
-				var expression = ContextExpression.createEventExpression(specification);
-				expression.startWatch();
+				ContextExpression.createEventExpression_(specification).then(function(expression){
+					expression.startWatch();
 
-				expression.on('trigger', function () {
-					assert.fail();
-				});
+					expression.on('trigger', function () {
+						assert.fail();
+					});
 
-				eventBus.emit('context event', {
-					text: 'foo'
-				});
+					eventBus.emit('context event', {
+						text: 'foo'
+					});
+				}).catch(done);
 			});
 
 			it('should not raise events when stop watch has been called', function (done) {
@@ -343,17 +348,18 @@ describe('Context expressions', function () {
 
 				setState('Monday', false);
 
-				var expression = ContextExpression.createEventExpression(specification);
-				expression.startWatch();
-				expression.stopWatch();
+				ContextExpression.createEventExpression_(specification).then(function(expression){
+					expression.startWatch();
+					expression.stopWatch();
 
-				expression.on('trigger', function () {
-					assert.fail();
-				});
+					expression.on('trigger', function () {
+						assert.fail();
+					});
 
-				eventBus.emit('context event', {
-					text: 'foo'
-				});
+					eventBus.emit('context event', {
+						text: 'foo'
+					});
+				}).catch(done);
 			});
 		});
 	});
