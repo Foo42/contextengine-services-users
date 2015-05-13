@@ -4,8 +4,6 @@ var proxyquire = require('proxyquire');
 
 var eventBus = new EventEmitter();
 
-
-
 var stateQueryService = (function () {
 	var states = {};
 	var stateWatches = new EventEmitter();
@@ -46,13 +44,11 @@ var stateQueryService = (function () {
 var setState = stateQueryService.setState;
 delete stateQueryService.setState;
 
-
 var ContextExpression;
 
 //TODO: 
 // * State expression stopWatch
 // * State expression polling / state subs
-
 
 describe('Context expressions', function () {
 	beforeEach(function (done) {
@@ -73,7 +69,7 @@ describe('Context expressions', function () {
 
 			setState('Monday', false);
 
-			ContextExpression.createStateExpression(specification).then(function(expression){
+			ContextExpression.createStateExpression(specification).then(function (expression) {
 				expression.startWatch();
 
 				expression.on('valueChanged', function (isActive) {
@@ -81,7 +77,7 @@ describe('Context expressions', function () {
 					done();
 				});
 
-				setState('Monday', true);	
+				setState('Monday', true);
 			}).catch(done);
 		});
 
@@ -94,7 +90,7 @@ describe('Context expressions', function () {
 
 			setState('Monday', true);
 
-			ContextExpression.createStateExpression(specification).then(function(expression){
+			ContextExpression.createStateExpression(specification).then(function (expression) {
 				expression.startWatch();
 
 				expression.on('valueChanged', function (isActive) {
@@ -115,13 +111,12 @@ describe('Context expressions', function () {
 
 			setState('Monday', false);
 
-			ContextExpression.createStateExpression(specification).then(function(expression){
+			ContextExpression.createStateExpression(specification).then(function (expression) {
 				expression.startWatch();
 
 				setTimeout(function () {
 					setState('Monday', true);
 				}, 300);
-
 
 				expression.on('valueChanged', function (isActive) {
 					//We dont mind if this triggers with false first, only that it becomes true
@@ -141,7 +136,7 @@ describe('Context expressions', function () {
 
 			setState('Monday', false);
 
-			ContextExpression.createStateExpression(specification).then(function(expression){
+			ContextExpression.createStateExpression(specification).then(function (expression) {
 				expression.startWatch();
 				expression.stopWatch();
 
@@ -149,7 +144,6 @@ describe('Context expressions', function () {
 					setState('Monday', true);
 					setTimeout(done, 100);
 				}, 300);
-
 
 				expression.on('valueChanged', function (isActive) {
 					assert.fail();
@@ -173,7 +167,7 @@ describe('Context expressions', function () {
 					}
 				};
 
-				ContextExpression.createEventExpression(specification).then(function(expression){
+				ContextExpression.createEventExpression(specification).then(function (expression) {
 					expression.startWatch();
 
 					expression.on('triggered', function () {
@@ -197,7 +191,7 @@ describe('Context expressions', function () {
 					}
 				};
 
-				ContextExpression.createEventExpression(specification).then(function(expression){
+				ContextExpression.createEventExpression(specification).then(function (expression) {
 					expression.on('triggered', function () {
 						if (!shouldBeRaisingEvents) {
 							assert.fail();
@@ -222,55 +216,9 @@ describe('Context expressions', function () {
 						text: 'foo'
 					});
 
-
 					done();
 				}).catch(done);
 
-			});
-
-			describe('cron events', function () {
-				it('should create a cron job when expression spec has cron property', function (done) {
-					var specification = {
-						on: {
-							cron: '00 26 12 * * *'
-						}
-					};
-
-					var fakeCronJob;
-					var fakes = {
-						'cron': {
-							CronJob: function (spec, cb) {
-								assert.equal(spec, '00 26 12 * * *');
-								fakeCronJob = {
-									fire: cb,
-									started: false,
-									start: function () {
-										fakeCronJob.started = true;
-									},
-									stop: function () {
-										fakeCronJob.started = false;
-									}
-								};
-								return fakeCronJob;
-							}
-						}
-					};
-
-					ContextExpression = proxyquire('../../../core/ContextExpression', fakes)(eventBus, stateQueryService);
-
-					ContextExpression.createEventExpression(specification).then(function(expression){
-						expression.startWatch();
-						assert.ok(fakeCronJob.started);
-
-						expression.on('triggered', function () {
-							expression.stopWatch();
-							assert.equal(fakeCronJob.started, false);
-							done();
-						});
-
-						fakeCronJob.fire();
-					}).catch(done);
-				});
 			});
 		});
 
@@ -288,7 +236,7 @@ describe('Context expressions', function () {
 				};
 
 				setState('Monday', true);
-				ContextExpression.createEventExpression(specification).then(function(expression){
+				ContextExpression.createEventExpression(specification).then(function (expression) {
 					expression.startWatch();
 
 					expression.on('triggered', function () {
@@ -318,7 +266,7 @@ describe('Context expressions', function () {
 
 				setState('Monday', true);
 
-				ContextExpression.createEventExpression(specification).then(function(expression){
+				ContextExpression.createEventExpression(specification).then(function (expression) {
 					expression.startWatch();
 
 					expression.on('trigger', function () {
@@ -348,7 +296,7 @@ describe('Context expressions', function () {
 
 				setState('Monday', false);
 
-				ContextExpression.createEventExpression(specification).then(function(expression){
+				ContextExpression.createEventExpression(specification).then(function (expression) {
 					expression.startWatch();
 					expression.stopWatch();
 

@@ -1,26 +1,27 @@
 var Promise = require('bluebird');
 var cron = require('cron');
 var logger = require('../../core/logger');
-var distex = require('distex');
+var distexProvider = require('./distexProvider');
 
-function distexProviderHandler(request){
-	logger.info('distex request:',request);
+function canHandle(request) {
+	logger.info('distex request:', request);
 	return Promise.resolve(request.expression.cron);
 }
 
-var bootstrap = require('rabbit-pie').connect().then(function(connection){
-	logger.info('distex provider connected');
-	return distex.provider.create(connection, distexProviderHandler);
-}).then(function(provider){
-	provider.on('contract accepted',function(contract){
-		logger.info('contract accepted',contract);
-		
-		var cronJob = new cron.CronJob(contract.expression.cron, function(){
+var bootstrap = distexProvider.create(canHandle).then(function (provider) {
+	provider.on('contract accepted', function (contract) {
+		logger.info('contract accepted', contract);
+
+		var cronJob = new cron.CronJob(contract.expression.cron, function () {
 			contract.pushEvent({});
 		});
 
-		contract.on('watching',function(){cronJob.start()});
-		contract.on('notWatching',function(){cronJob.stop()});
+		contract.on('watching', function () {
+			cronJob.start()
+		});
+		contract.on('notWatching', function () {
+			cronJob.stop()
+		});
 	});
 });
 
