@@ -4,14 +4,14 @@ var objectMatches = require('../objectMatches');
 var logger = require('../logger');
 var distex = require('distex');
 
-var distexClientConnecting = require('rabbit-pie').connect().then(function(connection){
+var distexClientConnecting = require('rabbit-pie').connect().then(function (connection) {
 	logger.info('distex client connected');
 	return distex.client.create(connection);
 });
 
 module.exports = function (contextEventBusReader, stateQueryService) {
 	var createStateExpressionSync = function createStateExpressionSync(specification) {
-		specification = specification.whilst || specification; 
+		specification = specification.whilst || specification;
 		var stateName = specification.isActive || specification.isNotActive;
 
 		var isDesiredState = function (stateActiveState) {
@@ -71,18 +71,18 @@ module.exports = function (contextEventBusReader, stateQueryService) {
 		}
 
 		if (specification.cron) {
-			var settingUpCron = distexClientConnecting.then(function(client){
-				return new Promise(function(resolve, reject){
-					var clientContract = client.requestHandler({cron:specification.cron});
+			var settingUpCron = distexClientConnecting.then(function (client) {
+				return new Promise(function (resolve, reject) {
+					var clientContract = client.requestHandler(specification);
 					clientContract.on('status.handled', function () {
-						clientContract.on('event.recieved',triggerEvent);
-	                    clientContract.watch();
+						clientContract.on('event.recieved', triggerEvent);
+						clientContract.watch();
 
-	                    expression.on('starting watch', clientContract.watch.bind(clientContract));
+						expression.on('starting watch', clientContract.watch.bind(clientContract));
 						expression.on('stopping watch', clientContract.stopWatching.bind(clientContract));
 						resolve();
-	                });	
-				});	
+					});
+				});
 			});
 
 			setupStages.push(settingUpCron);
@@ -92,7 +92,7 @@ module.exports = function (contextEventBusReader, stateQueryService) {
 			expression.emit('processing event', e);
 		};
 
-		return Promise.all(setupStages).then(function(){
+		return Promise.all(setupStages).then(function () {
 			return Promise.resolve({
 				startWatch: function () {
 					isWatching = true;
@@ -124,14 +124,14 @@ module.exports = function (contextEventBusReader, stateQueryService) {
 			startWatch: function () {
 				eventWatcher.startWatch();
 			},
-			stopWatch: function(){
+			stopWatch: function () {
 				eventWatcher.stopWatch();
 			},
 			on: eventPropegator.on.bind(eventPropegator),
 		});
 	}
 
-	function createEventExpression(specification){
+	function createEventExpression(specification) {
 		var eventSpec = specification.on || specification;
 		creatingEventWatcher = createEventWatch(eventSpec);
 
@@ -140,14 +140,14 @@ module.exports = function (contextEventBusReader, stateQueryService) {
 		}
 
 		var stateCondition = createStateExpressionSync(specification.whilst);
-		return creatingEventWatcher.then(function(eventWatcher){
+		return creatingEventWatcher.then(function (eventWatcher) {
 			return createStateConditionalEventWatcher(eventWatcher, stateCondition);
 		});
 	}
 
 	return {
 		createEventExpression: createEventExpression,
-		createStateExpression: function(specification){
+		createStateExpression: function (specification) {
 			return Promise.resolve(createStateExpressionSync(specification))
 		}
 	}
