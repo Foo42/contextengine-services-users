@@ -1,1 +1,4 @@
-{"states":[{"name":"testing","enter":{"on":{"eventMatching":{"text":"testing"}}},"exit":{"on":{"eventMatching":{"text":"finished testing"}}}}]}
+{"states":[
+	{"name":"testing","enter":{"on":{"eventMatching":{"text":"testing"}}},"exit":{"on":{"eventMatching":{"text":"finished testing"}}}},
+	{"name":"cron test","enter":{"on":{"cron":"* * * * * *"}},"exit":{"on":{"eventMatching":{"text":"finished testing"}}}}
+]}

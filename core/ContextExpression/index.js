@@ -3,6 +3,33 @@ var Promise = require('bluebird');
 var objectMatches = require('../objectMatches');
 var cron = require('cron');
 var logger = require('../logger');
+var distex = require('distex');
+
+function distexProviderHandler(request){
+	logger.info('distex request:',request);
+	return Promise.resolve(true);
+}
+
+require('rabbit-pie').connect().then(function(connection){
+	logger.info('distex provider connected');
+	return distex.provider.create(connection, distexProviderHandler);
+}).then(function(provider){
+	provider.on('contract accepted',function(contract){
+		logger.info('contract accepted',contract);
+		
+		var cronJob = new cron.CronJob(contract.expression, function(){
+			contract.pushEvent({});
+		});
+
+		contract.on('watching',function(){cronJob.start()});
+		contract.on('notWatching',function(){cronJob.stop()});
+	});
+});
+
+var distexClientConnecting = require('rabbit-pie').connect().then(function(connection){
+	logger.info('distex client connected');
+	return distex.client.create(connection);
+});
 
 module.exports = function (contextEventBusReader, stateQueryService) {
 	var createStateExpressionSync = function createStateExpressionSync(specification) {
@@ -40,7 +67,7 @@ module.exports = function (contextEventBusReader, stateQueryService) {
 		};
 	};
 
-	var createEventWatch = function createEventWatch(specification) {
+	function createEventWatch(specification) {
 		logger.log('creating event expression with spec ' + JSON.stringify(specification));
 		var expression = new EventEmitter();
 		var isWatching = false;
@@ -48,6 +75,8 @@ module.exports = function (contextEventBusReader, stateQueryService) {
 		var triggerEvent = function triggerEvent() {
 			expression.emit('triggered');
 		}
+
+		var setupStages = [];
 
 		if (specification.eventMatching) {
 			var processEventMatching = function processEventMatching(e) {
@@ -64,31 +93,48 @@ module.exports = function (contextEventBusReader, stateQueryService) {
 		}
 
 		if (specification.cron) {
-			var cronJob = new cron.CronJob(specification.cron, triggerEvent);
-			expression.on('starting watch', cronJob.start.bind(cronJob));
-			expression.on('stopping watch', cronJob.stop.bind(cronJob));
+			var settingUpCron = distexClientConnecting.then(function(client){
+				return new Promise(function(resolve, reject){
+					var clientContract = client.requestHandler(specification.cron);
+					clientContract.on('status.handled', function () {
+						clientContract.on('event.recieved',triggerEvent);
+	                    clientContract.watch();
+
+	                    expression.on('starting watch', clientContract.watch.bind(clientContract));
+						expression.on('stopping watch', clientContract.stopWatching.bind(clientContract));
+						resolve();
+	                });	
+				});	
+			});
+
+			setupStages.push(settingUpCron);
+			// var cronJob = new cron.CronJob(specification.cron, triggerEvent);
+			// expression.on('starting watch', cronJob.start.bind(cronJob));
+			// expression.on('stopping watch', cronJob.stop.bind(cronJob));
 		}
 
 		var handleEvent = function (e) {
 			expression.emit('processing event', e);
 		};
 
-		return {
-			startWatch: function () {
-				isWatching = true;
-				expression.emit('starting watch');
-				contextEventBusReader.on('context event', handleEvent);
-			},
-			stopWatch: function () {
-				isWatching = false;
-				expression.emit('stopping watch');
-				contextEventBusReader.removeListener('event', handleEvent);
-			},
-			on: expression.on.bind(expression)
-		}
+		return Promise.all(setupStages).then(function(){
+			return Promise.resolve({
+				startWatch: function () {
+					isWatching = true;
+					expression.emit('starting watch');
+					contextEventBusReader.on('context event', handleEvent);
+				},
+				stopWatch: function () {
+					isWatching = false;
+					expression.emit('stopping watch');
+					contextEventBusReader.removeListener('event', handleEvent);
+				},
+				on: expression.on.bind(expression)
+			});
+		});
 	};
 
-	var createStateConditionalEventWatcher = function createStateConditionalEventWatcher(eventWatcher, stateCondition) {
+	function createStateConditionalEventWatcher(eventWatcher, stateCondition) {
 		var eventPropegator = new EventEmitter();
 
 		eventWatcher.on('triggered', function (e) {
@@ -99,7 +145,7 @@ module.exports = function (contextEventBusReader, stateQueryService) {
 			})
 		});
 
-		return {
+		return Promise.resolve({
 			startWatch: function () {
 				eventWatcher.startWatch();
 			},
@@ -107,25 +153,25 @@ module.exports = function (contextEventBusReader, stateQueryService) {
 				eventWatcher.stopWatch();
 			},
 			on: eventPropegator.on.bind(eventPropegator),
-		}
+		});
 	}
 
-	function createEventExpressionSync(specification){
+	function createEventExpression(specification){
 		var eventSpec = specification.on || specification;
-		eventWatcher = createEventWatch(eventSpec);
+		creatingEventWatcher = createEventWatch(eventSpec);
 
 		if (!specification.whilst) {
-			return eventWatcher;
+			return creatingEventWatcher;
 		}
 
 		var stateCondition = createStateExpressionSync(specification.whilst);
-		return createStateConditionalEventWatcher(eventWatcher, stateCondition);
+		return creatingEventWatcher.then(function(eventWatcher){
+			return createStateConditionalEventWatcher(eventWatcher, stateCondition);
+		});
 	}
 
 	return {
-		createEventExpression: function(specification){
-			return Promise.resolve(createEventExpressionSync(specification))
-		},
+		createEventExpression: createEventExpression,
 		createStateExpression: function(specification){
 			return Promise.resolve(createStateExpressionSync(specification))
 		}
