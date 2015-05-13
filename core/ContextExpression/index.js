@@ -1,30 +1,8 @@
 var EventEmitter = require('events').EventEmitter;
 var Promise = require('bluebird');
 var objectMatches = require('../objectMatches');
-var cron = require('cron');
 var logger = require('../logger');
 var distex = require('distex');
-
-function distexProviderHandler(request){
-	logger.info('distex request:',request);
-	return Promise.resolve(true);
-}
-
-require('rabbit-pie').connect().then(function(connection){
-	logger.info('distex provider connected');
-	return distex.provider.create(connection, distexProviderHandler);
-}).then(function(provider){
-	provider.on('contract accepted',function(contract){
-		logger.info('contract accepted',contract);
-		
-		var cronJob = new cron.CronJob(contract.expression, function(){
-			contract.pushEvent({});
-		});
-
-		contract.on('watching',function(){cronJob.start()});
-		contract.on('notWatching',function(){cronJob.stop()});
-	});
-});
 
 var distexClientConnecting = require('rabbit-pie').connect().then(function(connection){
 	logger.info('distex client connected');
@@ -95,7 +73,7 @@ module.exports = function (contextEventBusReader, stateQueryService) {
 		if (specification.cron) {
 			var settingUpCron = distexClientConnecting.then(function(client){
 				return new Promise(function(resolve, reject){
-					var clientContract = client.requestHandler(specification.cron);
+					var clientContract = client.requestHandler({cron:specification.cron});
 					clientContract.on('status.handled', function () {
 						clientContract.on('event.recieved',triggerEvent);
 	                    clientContract.watch();
@@ -108,9 +86,6 @@ module.exports = function (contextEventBusReader, stateQueryService) {
 			});
 
 			setupStages.push(settingUpCron);
-			// var cronJob = new cron.CronJob(specification.cron, triggerEvent);
-			// expression.on('starting watch', cronJob.start.bind(cronJob));
-			// expression.on('stopping watch', cronJob.stop.bind(cronJob));
 		}
 
 		var handleEvent = function (e) {
