@@ -2,7 +2,7 @@ var Promise = require('bluebird');
 var EventEmitter = require('events').EventEmitter;
 var logger = require('../../../core/logger');
 
-var createRule = function (config, expressionFactory) {
+var createRule = function (config, userId, expressionFactory) {
 	var state = new EventEmitter();
 	state.active = false;
 
@@ -33,7 +33,7 @@ var createRule = function (config, expressionFactory) {
 	}
 
 	if (config.isActive) {
-		establishingLiveExpressions.push(expressionFactory.createStateExpression(config.isActive).then(function(stateExpression){
+		establishingLiveExpressions.push(expressionFactory.createStateExpression(config.isActive).then(function (stateExpression) {
 			stateExpression.on('valueChanged', function (newValue) {
 				newValue ? activate() : deactivate();
 			});
@@ -50,11 +50,11 @@ var createRule = function (config, expressionFactory) {
 
 			state.on('disposing', function () {
 				stateExpression.stopWatch()
-			});	
+			});
 		}));
 	} else if (config.enter || config.exit) {
 		if (config.enter) {
-			establishingLiveExpressions.push(expressionFactory.createEventExpression(config.enter).then(function(entryExpression){
+			establishingLiveExpressions.push(expressionFactory.createEventExpression(config.enter, userId).then(function (entryExpression) {
 				state.on('activated', function () {
 					entryExpression.stopWatch();
 				});
@@ -70,12 +70,12 @@ var createRule = function (config, expressionFactory) {
 				state.on('disposing', function () {
 					entryExpression.stopWatch()
 				});
-				entryExpression.startWatch();	
+				entryExpression.startWatch();
 			}));
 		}
 
 		if (config.exit) {
-			establishingLiveExpressions.push(expressionFactory.createEventExpression(config.exit).then(function(exitExpression){
+			establishingLiveExpressions.push(expressionFactory.createEventExpression(config.exit, userId).then(function (exitExpression) {
 				state.on('deactivated', function () {
 					exitExpression.stopWatch();
 				});
@@ -91,7 +91,9 @@ var createRule = function (config, expressionFactory) {
 			}));
 		}
 	}
-	return Promise.all(establishingLiveExpressions).then(function(){return state});
+	return Promise.all(establishingLiveExpressions).then(function () {
+		return state
+	});
 };
 
 module.exports = {

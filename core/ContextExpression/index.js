@@ -2,12 +2,8 @@ var EventEmitter = require('events').EventEmitter;
 var Promise = require('bluebird');
 var objectMatches = require('../objectMatches');
 var logger = require('../logger');
-var distex = require('distex');
 
-var distexClientConnecting = require('rabbit-pie').connect().then(function (connection) {
-	logger.info('distex client connected');
-	return distex.client.create(connection);
-});
+var distexClientConnecting = require('./connectDistexClient');
 
 module.exports = function (contextEventBusReader, stateQueryService) {
 	var createStateExpressionSync = function createStateExpressionSync(specification) {
@@ -45,7 +41,7 @@ module.exports = function (contextEventBusReader, stateQueryService) {
 		};
 	};
 
-	function createEventWatch(specification) {
+	function createEventWatch(specification, userId) {
 		logger.log('creating event expression with spec ' + JSON.stringify(specification));
 		var expression = new EventEmitter();
 		var isWatching = false;
@@ -57,17 +53,21 @@ module.exports = function (contextEventBusReader, stateQueryService) {
 		var setupStages = [];
 
 		if (specification.eventMatching) {
-			var processEventMatching = function processEventMatching(e) {
-				if (!isWatching) {
-					return;
-				}
-				if (objectMatches(e, specification.eventMatching)) {
-					logger.log('triggering ', specification);
-					triggerEvent();
-				}
-			};
+			var settingUpEventsMatching = distexClientConnecting.then(function (client) {
+				return new Promise(function (resolve, reject) {
+					var clientContract = client.requestHandler(specification, userId);
+					clientContract.on('status.handled', function () {
+						clientContract.on('event.recieved', triggerEvent);
+						clientContract.watch();
 
-			expression.on('processing event', processEventMatching);
+						expression.on('starting watch', clientContract.watch.bind(clientContract));
+						expression.on('stopping watch', clientContract.stopWatching.bind(clientContract));
+						resolve();
+					});
+				});
+			});
+
+			setupStages.push(settingUpEventsMatching);
 		}
 
 		if (specification.cron) {
@@ -131,9 +131,9 @@ module.exports = function (contextEventBusReader, stateQueryService) {
 		});
 	}
 
-	function createEventExpression(specification) {
+	function createEventExpression(specification, userId) {
 		var eventSpec = specification.on || specification;
-		creatingEventWatcher = createEventWatch(eventSpec);
+		creatingEventWatcher = createEventWatch(eventSpec, userId);
 
 		if (!specification.whilst) {
 			return creatingEventWatcher;

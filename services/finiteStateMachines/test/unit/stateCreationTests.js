@@ -18,7 +18,7 @@ describe('State creation', function () {
 			var mockExpressionFactory = {};
 			binaryState.createRule({
 				name: 'bob'
-			}, mockExpressionFactory).then(function (state) {
+			}, 'someone', mockExpressionFactory).then(function (state) {
 				assert.equal(state.name, 'bob');
 				done();
 			});
@@ -27,7 +27,7 @@ describe('State creation', function () {
 			var mockExpressionFactory = {};
 			binaryState.createRule({
 				sha: '12345ABCDEF'
-			}, mockExpressionFactory).then(function (state) {
+			}, 'someone', mockExpressionFactory).then(function (state) {
 				assert.equal(state.sha, '12345ABCDEF');
 				done();
 			});
@@ -52,7 +52,7 @@ describe('State creation', function () {
 				}
 			};
 
-			binaryState.createRule(specification, mockExpressionFactory).then(function(state) {
+			binaryState.createRule(specification, 'someone', mockExpressionFactory).then(function (state) {
 				assert.ok(state);
 				assert.equal(state.active, false);
 
@@ -107,7 +107,7 @@ describe('State creation', function () {
 				}
 			};
 
-			binaryState.createRule(specification, mockExpressionFactory).then(function (state) {
+			binaryState.createRule(specification, 'someone', mockExpressionFactory).then(function (state) {
 				assert.ok(entryCondition.startCalled);
 
 				state.on('activated', function () {
@@ -156,7 +156,7 @@ describe('State creation', function () {
 						}
 					};
 
-					binaryState.createRule(specification, mockExpressionFactory).then(function (state) {
+					binaryState.createRule(specification, 'someone', mockExpressionFactory).then(function (state) {
 						state.dispose();
 						var expressionIsWatching = function expressionIsWatching(expression) {
 							return expression.watching;
@@ -195,7 +195,7 @@ describe('State creation', function () {
 				}
 			};
 
-			binaryState.createRule(specification, mockExpressionFactory).then(function (state) {
+			binaryState.createRule(specification, 'someone', mockExpressionFactory).then(function (state) {
 				assert.ok(state);
 				assert.equal(state.active, expressionValue);
 				done();
@@ -223,7 +223,7 @@ describe('State creation', function () {
 				}
 			};
 
-			binaryState.createRule(specification, mockExpressionFactory).then(function (state) {
+			binaryState.createRule(specification, 'someone', mockExpressionFactory).then(function (state) {
 				assert.ok(state);
 				assert.equal(state.active, true);
 
@@ -262,7 +262,7 @@ describe('State creation', function () {
 				}
 			};
 
-			binaryState.createRule(specification, mockExpressionFactory).then(function (state) {
+			binaryState.createRule(specification, 'someone', mockExpressionFactory).then(function (state) {
 				state.dispose();
 			}).catch(done);
 		});

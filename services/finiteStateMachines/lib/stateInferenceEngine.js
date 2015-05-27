@@ -7,21 +7,28 @@ var binaryState = require('./binaryState');
 var finiteStateDirectQueryService = require('./finiteStateDirectQueryService');
 var logger = require('../../../core/logger');
 
-var addStatesFromConfig = function (contextEventBusReader, listener, config, callback) {
+var addStatesFromConfig = function (contextEventBusReader, listener, config, userId, callback) {
 	var stateQueryService = require('./stateQueryService')(listener);
 	var expressionFactory = require('../../../core/ContextExpression')(contextEventBusReader, stateQueryService);
-	
-	Promise.map(config, function(stateConfig){
-		return binaryState.createRule(stateConfig, expressionFactory);
-	}).then(function(states){
-		states.forEach(function(state){
+
+	Promise.map(config, function (stateConfig) {
+		logger.info('mapping config to binary state for user', userId);
+		var timeout = setTimeout(function () {
+			logger.warn('Taking a long time to create rule with config', stateConfig, 'for user', userId);
+		}, 3000);
+		return binaryState.createRule(stateConfig, userId, expressionFactory).then(function (rule) {
+			clearTimeout(timeout);
+			return rule;
+		});
+	}).then(function (states) {
+		logger.log('all states created for user', userId);
+		states.forEach(function (state) {
 			listener.add(state);
 		});
-		
-		logger.log('added ' + states.length + ' states');
+
 		callback(null, states.length);
-	}).catch(function(err){
-		logger.error('Error creating states',err);
+	}).catch(function (err) {
+		logger.error('Error creating states', err, 'at', err.stack);
 		callback(err);
 	});
 }
@@ -65,7 +72,7 @@ module.exports = (function () {
 								logger.error('error removing states', err);
 								return
 							};
-							addStatesFromConfig(contextEventBusReader, listener, delta.added, function () {});
+							addStatesFromConfig(contextEventBusReader, listener, delta.added, user.id, function () {});
 						});
 
 					}).catch(function (err) {
@@ -74,7 +81,7 @@ module.exports = (function () {
 
 					configAccessForUser.getStateConfig().then(function (stateConfig) {
 						activeConfig = stateConfig;
-						addStatesFromConfig(contextEventBusReader, listener, stateConfig.states, function () {
+						addStatesFromConfig(contextEventBusReader, listener, stateConfig.states, user.id, function () {
 							listener.on('stateChange.activated', function (event) {
 								contextEventBusWriter.registerNewEvent(event, function () {})
 							});
@@ -83,9 +90,13 @@ module.exports = (function () {
 							});
 
 							finiteStateDirectQueryService.registerStateAccessFunction(user.id, listener.getAllStates.bind(listener));
-
+							logger.log('Created finite state machine for user:', user.id);
 							done();
 						});
+					}).catch(function (err) {
+						logger.error('Error creating finite state machine for user', user.id, 'with error:', err, 'at', err.stack);
+						console.dir(err);
+						done(err);
 					});
 				}
 			],

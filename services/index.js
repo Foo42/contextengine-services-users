@@ -49,19 +49,17 @@ module.exports.bootstrapServices = function () {
     process.on('SIGTERM', cleanUpChildProcesses);
 
     return Promise.all(
-            [
-                startService('./users'),
-                startService('./eventStamper')
-            ]).then(function () {
-            return startService('./historicalEventService')
-        }).then(function () {
-            return startService('./cron')
-        }).then(function () {
-            return Promise.all(
-                [,
-                    startService('./finiteStateMachines'),
-                    startService('./webFrontEnd')
-                ]
-            )
-        });
+        [
+            startService('./users'),
+            startService('./eventStamper')
+        ]
+    ).then(function () {
+        return startService('./historicalEventService')
+    }).then(function () {
+        return startService('./cron')
+    }).then(function () {
+        return startService('./finiteStateMachines')
+    }).then(function () {
+        return startService('./webFrontEnd')
+    });
 }

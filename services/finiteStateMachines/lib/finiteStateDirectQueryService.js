@@ -8,6 +8,7 @@ var temporaryImplementionBeforeWeHaveDiscreteServices = {
 	getStatesForUser: function (userId, callback) {
 		f = registeredStateAccessFunctions[userId];
 		if (f === undefined) {
+			logger.error('Being asked for states for unknown user', userId);
 			return callback(new Error('unknown user'));
 		}
 		return callback(null, f());

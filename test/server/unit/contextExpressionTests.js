@@ -1,6 +1,8 @@
 var assert = require("assert");
 var EventEmitter = require('events').EventEmitter;
 var proxyquire = require('proxyquire');
+var Promise = require('bluebird');
+require('chai').should();
 
 var eventBus = new EventEmitter();
 
@@ -45,6 +47,8 @@ var setState = stateQueryService.setState;
 delete stateQueryService.setState;
 
 var ContextExpression;
+var fakeDistexClient;
+var fakeContract;
 
 //TODO: 
 // * State expression stopWatch
@@ -56,7 +60,27 @@ describe('Context expressions', function () {
 		states = {};
 		stateQueryService.cleanUp();
 		done();
-		ContextExpression = require('../../../core/ContextExpression')(eventBus, stateQueryService);
+		fakeDistexClient = {};
+
+		fakeDistexClient.requestHandler = function (spec, user) {
+			fakeContract = new EventEmitter();
+			fakeContract.calls = []
+			fakeContract.watch = function () {
+				this.calls.push('watch');
+			}
+			fakeContract.stopWatching = function () {
+				this.calls.push('stopWatching');
+			}
+			setImmediate(function () {
+				fakeContract.emit('status.handled');
+			});
+			return fakeContract;
+		}
+		var substitutions = {
+			'./connectDistexClient': Promise.resolve(fakeDistexClient)
+		}
+		ContextExpression = proxyquire('../../../core/ContextExpression', substitutions)(eventBus, stateQueryService);
+		done();
 	});
 
 	describe('simple state expressions', function () {
@@ -158,7 +182,7 @@ describe('Context expressions', function () {
 
 	describe('event expressions', function () {
 		describe('simple event expressions', function () {
-			it('should raise event when eventMatching condition described in expression fires', function (done) {
+			it('should raise event when distex contract for expression raises an event', function (done) {
 				var specification = {
 					on: {
 						eventMatching: {
@@ -168,19 +192,18 @@ describe('Context expressions', function () {
 				};
 
 				ContextExpression.createEventExpression(specification).then(function (expression) {
+					console.log('got expression')
 					expression.startWatch();
 
 					expression.on('triggered', function () {
 						done();
 					});
 
-					eventBus.emit('context event', {
-						text: 'foo'
-					});
+					fakeContract.emit('event.recieved', {});
 				}).catch(done);
 			});
 
-			it('should not raise events when stopWatch has been called', function (done) {
+			it('should call stopWatch on underlying distex contract when stopWatch has been called on expression', function (done) {
 				var shouldBeRaisingEvents = false;
 
 				var specification = {
@@ -192,31 +215,10 @@ describe('Context expressions', function () {
 				};
 
 				ContextExpression.createEventExpression(specification).then(function (expression) {
-					expression.on('triggered', function () {
-						if (!shouldBeRaisingEvents) {
-							assert.fail();
-						}
-					});
-
-					eventBus.emit('context event', {
-						text: 'foo'
-					});
-
-					expression.startWatch();
-					shouldBeRaisingEvents = true;
-
-					eventBus.emit('context event', {
-						text: 'foo'
-					});
-
 					expression.stopWatch();
-					shouldBeRaisingEvents = false;
-
-					eventBus.emit('context event', {
-						text: 'foo'
-					});
-
+					fakeContract.calls.pop().should.equal('stopWatching');
 					done();
+
 				}).catch(done);
 
 			});
@@ -236,16 +238,13 @@ describe('Context expressions', function () {
 				};
 
 				setState('Monday', true);
+
 				ContextExpression.createEventExpression(specification).then(function (expression) {
 					expression.startWatch();
-
 					expression.on('triggered', function () {
 						done();
 					});
-
-					eventBus.emit('context event', {
-						text: 'foo'
-					});
+					fakeContract.emit('event.recieved', {});
 				}).catch(done);
 			});
 

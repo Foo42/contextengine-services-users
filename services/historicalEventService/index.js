@@ -1,8 +1,10 @@
+var http = require('http');
+var Promise = require('bluebird');
+var express = require('express');
 var logger = require('../../core/logger');
 logger.log('HistorialEventService starting...');
-var http = require('http');
-var express = require('express');
 var historicalEventAccess = require('./lib/historicalEventAccess');
+var eventsMatchingEventProvider = require('./lib/eventsMatchingEventProvider');
 
 process.once('exit', logger.log.bind(logger, 'recieved exit event'));
 
@@ -26,7 +28,7 @@ app.get('/events/recent', function (request, response, next) {
 });
 
 http.createServer(app).listen(app.get('port'), function () {
-	historicalEventAccess.start().then(function () {
+	Promise.all([historicalEventAccess.start(), eventsMatchingEventProvider.start()]).then(function () {
 		logger.log('announcing ready');
 		process.send('{"status":"ready"}');
 	});
