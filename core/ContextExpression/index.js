@@ -47,7 +47,9 @@ module.exports = function (contextEventBusReader, stateQueryService) {
 		var isWatching = false;
 
 		var triggerEvent = function triggerEvent() {
-			expression.emit('triggered');
+			if (isWatching) {
+				expression.emit('triggered');
+			}
 		}
 
 		var setupStages = [];

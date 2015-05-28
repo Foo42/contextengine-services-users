@@ -192,13 +192,11 @@ describe('Context expressions', function () {
 				};
 
 				ContextExpression.createEventExpression(specification).then(function (expression) {
-					console.log('got expression')
 					expression.startWatch();
 
 					expression.on('triggered', function () {
 						done();
 					});
-
 					fakeContract.emit('event.recieved', {});
 				}).catch(done);
 			});
@@ -268,13 +266,11 @@ describe('Context expressions', function () {
 				ContextExpression.createEventExpression(specification).then(function (expression) {
 					expression.startWatch();
 
-					expression.on('trigger', function () {
+					expression.on('triggered', function () {
 						assert.fail();
 					});
 
-					eventBus.emit('context event', {
-						text: 'foo'
-					});
+					fakeContract.emit('event.recieved', {});
 				}).catch(done);
 			});
 
@@ -299,13 +295,11 @@ describe('Context expressions', function () {
 					expression.startWatch();
 					expression.stopWatch();
 
-					expression.on('trigger', function () {
+					expression.on('triggered', function () {
 						assert.fail();
 					});
 
-					eventBus.emit('context event', {
-						text: 'foo'
-					});
+					fakeContract.emit('event.recieved', {});
 				}).catch(done);
 			});
 		});
