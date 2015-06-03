@@ -4,7 +4,6 @@ var logger = require('../../core/logger');
 var distexProvider = require('./distexProvider');
 
 function canHandle(request) {
-	logger.info('distex request:', request);
 	return Promise.resolve(request.expression.cron);
 }
 
@@ -13,6 +12,7 @@ var bootstrap = distexProvider.create(canHandle).then(function (provider) {
 		logger.info('contract accepted', contract);
 
 		var cronJob = new cron.CronJob(contract.expression.cron, function () {
+			logger.info('Cron:', contract.expression.cron, 'firing. Sending event on contract with requestId', contract.requestId, ' and handlingToken', contract.handlingToken);
 			contract.pushEvent({});
 		});
 

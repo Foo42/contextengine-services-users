@@ -57,7 +57,10 @@ module.exports = function (contextEventBusReader, stateQueryService) {
 		if (specification.eventMatching) {
 			var settingUpEventsMatching = distexClientConnecting.then(function (client) {
 				return new Promise(function (resolve, reject) {
-					var clientContract = client.requestHandler(specification, userId);
+					var clientContract = client.requestHandler({
+						expression: specification,
+						userId: userId
+					});
 					clientContract.on('status.handled', function () {
 						clientContract.on('event.recieved', triggerEvent);
 						clientContract.watch();
@@ -75,7 +78,10 @@ module.exports = function (contextEventBusReader, stateQueryService) {
 		if (specification.cron) {
 			var settingUpCron = distexClientConnecting.then(function (client) {
 				return new Promise(function (resolve, reject) {
-					var clientContract = client.requestHandler(specification);
+					var clientContract = client.requestHandler({
+						expression: specification,
+						userId: userId
+					});
 					clientContract.on('status.handled', function () {
 						clientContract.on('event.recieved', triggerEvent);
 						clientContract.watch();

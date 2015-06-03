@@ -2,7 +2,7 @@ var colors = require('colors/safe');
 var serviceName = process.env.SERVICE_NAME;
 
 function colourArguments(args, colour) {
-	return Array.prototype.slice.call(args).map(colors[colour]);
+	return Array.prototype.slice.call(args) //.map(colors[colour]);
 }
 
 module.exports = {

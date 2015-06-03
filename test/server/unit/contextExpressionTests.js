@@ -62,7 +62,7 @@ describe('Context expressions', function () {
 		done();
 		fakeDistexClient = {};
 
-		fakeDistexClient.requestHandler = function (spec, user) {
+		fakeDistexClient.requestHandler = function (spec) {
 			fakeContract = new EventEmitter();
 			fakeContract.calls = []
 			fakeContract.watch = function () {
