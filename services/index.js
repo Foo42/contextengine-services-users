@@ -54,7 +54,12 @@ module.exports.bootstrapServices = function () {
             startService('./eventStamper')
         ]
     ).then(function () {
-        return startService('./historicalEventService')
+        return Promise.all(
+            [
+                startService('./historicalEventService'),
+                startService('./notifier')
+            ]
+        );
     }).then(function () {
         return startService('./cron')
     }).then(function () {
