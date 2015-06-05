@@ -78,6 +78,20 @@ var client = {
 				return configNotificationListener.then(function (listener) {
 					listener.subscribeToConfigChangesForUser(userId, callback);
 				});
+			},
+			getConfig: function (path) {
+				var url = 'http://localhost:9120/config/' + encodeURIComponent(userId) + (path.replace(/^([^\/])(.*)/, '/$1$2') || '/');
+				return new Promise(function (resolve, reject) {
+					request(url, function (err, response, body) {
+						if (err) {
+							return reject(err);
+						}
+						if (response.statusCode !== 200) {
+							return reject(new Error('did not get 200 response from service. Got ' + response.statusCode));
+						}
+						resolve(JSON.parse(body));
+					});
+				});
 			}
 		}
 	}
