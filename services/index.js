@@ -56,8 +56,7 @@ module.exports.bootstrapServices = function () {
     ).then(function () {
         return Promise.all(
             [
-                startService('./historicalEventService'),
-                startService('./notifier')
+                startService('./historicalEventService')
             ]
         );
     }).then(function () {
@@ -65,6 +64,6 @@ module.exports.bootstrapServices = function () {
     }).then(function () {
         return startService('./finiteStateMachines')
     }).then(function () {
-        return startService('./webFrontEnd')
+        return Promise.all([startService('./webFrontEnd'), startService('./notifier')]);
     });
 }

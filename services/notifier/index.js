@@ -2,7 +2,7 @@ var Promise = require('bluebird');
 var cron = require('cron');
 var logger = require('../../core/logger');
 
-var bootstrap = Promise.resolve();
+var bootstrap = require('./lib').start();
 
 bootstrap.then(function () {
 	if (!process || !process.send) {
