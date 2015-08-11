@@ -78,7 +78,7 @@ describe('application', function () {
 		});
 	});
 
-	it.only('should allow querying of active states', function (done) {
+	it('should allow querying of active states', function (done) {
 		request.get({
 			url: host + '/states/active'
 		}, function (err, response, body) {

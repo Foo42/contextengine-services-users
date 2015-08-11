@@ -6,6 +6,7 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-notify');
   grunt.loadNpmTasks('grunt-mocha');
   grunt.loadNpmTasks('grunt-contrib-copy');
+  grunt.loadNpmTasks('grunt-contrib-clean');
 
   grunt.initConfig({
     // Configure a mochaTest task
@@ -43,6 +44,9 @@ module.exports = function (grunt) {
         tasks: ['quickFeedback'],
       },
     },
+    clean: {
+      testData: ['test/data/']
+    },
     copy: {
       testData: {
         files: [{
@@ -57,8 +61,8 @@ module.exports = function (grunt) {
 
   console.log('GRUNT:', 'USER_DATA_PATH', path.join(__dirname, 'test', 'data'));
   grunt.registerTask('unitTest', ['mochaTest:unit']);
-  grunt.registerTask('systemTest', ['copy:testData', 'mochaTest:smoke']);
-  grunt.registerTask('test', ['unitTest', 'systemTest']);
+  grunt.registerTask('systemTest', ['clean:testData', 'copy:testData', 'mochaTest:smoke']);
+  grunt.registerTask('test', ['clean:testData', 'copy:testData', 'unitTest', 'systemTest']);
   grunt.registerTask('quickFeedback', ['unitTest']);
   grunt.registerTask('default', ['test']);
 

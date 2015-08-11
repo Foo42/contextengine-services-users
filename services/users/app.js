@@ -1,11 +1,13 @@
 var logger = require('../../core/logger');
 logger.log('Users service starting...');
 var http = require('http');
+var path = require('path');
 var express = require('express');
 var registeredUsersAccess = require('./registeredUsers');
 var userConfigurationAccess = require('../../core/userConfigurationAccess');
 var Promise = require('promise');
 var configDiff = require('./configDiff');
+var configBuckets = require('./configBuckets');
 
 process.once('exit', logger.log.bind(logger, 'recieved exit event'));
 
@@ -83,6 +85,31 @@ app.post('/config/:userId/state', function (req, res, next) {
 		});
 	});
 
+});
+
+var baseUserDataPath = (process.env.USER_DATA_PATH || path.join(path.dirname(require.main.filename), 'data', 'userSpecific'));
+
+app.post('/config/:userId/:configRoute*', function (req, res) {
+	console.log('post config route', req.params.configRoute)
+	var bucketName = req.params.configRoute;
+	console.log('req.body', req.body);
+	configBuckets.forUser({
+		id: req.params.userId
+	}).set(bucketName, req.body.configJSON);
+
+	res.send(201);
+});
+
+app.get('/config/:userId/:configRoute*', function (req, res) {
+	var bucketName = req.params.configRoute;
+	configBuckets.forUser({
+		id: req.params.userId
+	}).get(bucketName).then(function (config) {
+		res.json(config);
+	}).catch(function (err) {
+		logger.warn('Error retrieving', bucketName, 'contents. Error', err);
+		res.send(404);
+	})
 });
 
 module.exports = app;
