@@ -1,6 +1,7 @@
 var debuglog = require('debugLog')('notifications_service');
 var registeredUsersAccess = require('../../users/client');
 var connectingDistexClient = require('./connectDistexClient');
+var send = require('./sender');
 
 var Promise = require('bluebird');
 
@@ -18,11 +19,19 @@ var config = {
 }
 
 function getNotificationConfigForUser(user) {
-	return Promise.resolve(config[user.id] || {});
+	return registeredUsersAccess.configAccessForUser(user).getConfig('notifications').catch(function () {
+		return {
+			notifictionTriggers: []
+		};
+	})
 }
 
 function pushNotification(user, message) {
-	console.log('NOTIFICATION!!!!!!!!!!!!!!!!', user.id, message);
+	getNotificationConfigForUser(user).then(function (config) {
+		send(user, config, message).then(function () {
+			console.log('notification sent via pushover');
+		});
+	}).catch(console.error.bind(console, 'Error sending push notification'));
 }
 
 function setupNotification(user, notificationSpec) {
