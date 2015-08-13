@@ -2,12 +2,13 @@ var rabbitPie = require('rabbit-pie');
 var EventEmitter = require('events').EventEmitter;
 var Promise = require('promise');
 var logger = require('../../core/logger');
+var connectToStatusNet = require('../../core/serviceStatus').connect();
 
 var generateEventId = (function () {
 	var counter = 0;
 	var pid = process.pid;
 	return function () {
-		return "" + pid + counter++ +(new Date().valueOf());
+		return "" + pid + counter++ + (new Date().valueOf());
 	};
 })();
 
@@ -47,6 +48,9 @@ bootstrap.then(function () {
 	process.send(JSON.stringify({
 		status: "ready"
 	}));
+	connectToStatusNet.then(function (statusNet) {
+		statusNet.beaconStatus();
+	});
 }).catch(function (err) {
 	logger.log('badness', err);
 	process.exit(1);

@@ -2,6 +2,7 @@ var Promise = require('bluebird');
 var cron = require('cron');
 var logger = require('../../core/logger');
 var distexProvider = require('./distexProvider');
+var connectToStatusNet = require('../../core/serviceStatus').connect();
 
 function canHandle(request) {
 	return Promise.resolve(request.expression.cron);
@@ -32,6 +33,9 @@ bootstrap.then(function () {
 	process.send(JSON.stringify({
 		status: "ready"
 	}));
+	connectToStatusNet.then(function (statusNet) {
+		statusNet.beaconStatus();
+	});
 }).catch(function (err) {
 	logger.log('badness', err);
 	process.exit(1);

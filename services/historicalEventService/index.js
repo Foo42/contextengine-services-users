@@ -5,6 +5,7 @@ var logger = require('../../core/logger');
 logger.log('HistorialEventService starting...');
 var historicalEventAccess = require('./lib/historicalEventAccess');
 var eventsMatchingEventProvider = require('./lib/eventsMatchingEventProvider');
+var connectToStatusNet = require('../../core/serviceStatus').connect();
 
 process.once('exit', logger.log.bind(logger, 'recieved exit event'));
 
@@ -31,5 +32,8 @@ http.createServer(app).listen(app.get('port'), function () {
 	Promise.all([historicalEventAccess.start(), eventsMatchingEventProvider.start()]).then(function () {
 		logger.log('announcing ready');
 		process.send('{"status":"ready"}');
+		connectToStatusNet.then(function (statusNet) {
+			statusNet.beaconStatus();
+		});
 	});
 });

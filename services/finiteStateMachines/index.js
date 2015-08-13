@@ -6,6 +6,7 @@ var registeredUsersAccess = require('../users/client');
 var userConfigurationAccess = require('../../core/userConfigurationAccess');
 var logger = require('../../core/logger');
 var httpInterface = require('./httpInterface');
+var connectToStatusNet = require('../../core/serviceStatus').connect();
 
 function createContextEngineForUser(user) {
 	var userId = user.id;
@@ -51,6 +52,9 @@ start().then(function () {
 	process.send(JSON.stringify({
 		status: "ready"
 	}));
+	connectToStatusNet.then(function (statusNet) {
+		statusNet.beaconStatus();
+	})
 }).then(httpInterface.start()).catch(function (err) {
 	logger.error('Failed to create all finite state machines with error ' + err);
 	process.exit(1);
