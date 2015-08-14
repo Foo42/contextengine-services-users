@@ -8,25 +8,28 @@ function canHandle(request) {
 	return Promise.resolve(request.expression.cron);
 }
 
-var bootstrap = distexProvider.create(canHandle).then(function (provider) {
-	provider.on('contract accepted', function (contract) {
-		logger.info('contract accepted', contract);
+connectToStatusNet.then(function (statusNet) {
+	statusNet.awaitOnline('eventStamper', 'historicalEventService');
+}).then(function () {
+	var bootstrap = distexProvider.create(canHandle).then(function (provider) {
+		provider.on('contract accepted', function (contract) {
+			logger.info('contract accepted', contract);
 
-		var cronJob = new cron.CronJob(contract.expression.cron, function () {
-			logger.info('Cron:', contract.expression.cron, 'firing. Sending event on contract with requestId', contract.requestId, ' and handlingToken', contract.handlingToken);
-			contract.pushEvent({});
-		});
+			var cronJob = new cron.CronJob(contract.expression.cron, function () {
+				logger.info('Cron:', contract.expression.cron, 'firing. Sending event on contract with requestId', contract.requestId, ' and handlingToken', contract.handlingToken);
+				contract.pushEvent({});
+			});
 
-		contract.on('watching', function () {
-			cronJob.start()
-		});
-		contract.on('notWatching', function () {
-			cronJob.stop()
+			contract.on('watching', function () {
+				cronJob.start()
+			});
+			contract.on('notWatching', function () {
+				cronJob.stop()
+			});
 		});
 	});
-});
-
-bootstrap.then(function () {
+	return bootstrap;
+}).then(function () {
 	if (!process || !process.send) {
 		return;
 	}

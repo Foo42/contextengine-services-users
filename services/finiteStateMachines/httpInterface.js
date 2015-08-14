@@ -13,21 +13,23 @@ module.exports.start = function () {
 	app.use(express.methodOverride());
 	app.use(app.router);
 
-	app.get('/states/active',function(req,res){
+	app.get('/states/active', function (req, res) {
 		var userId = req.param('userid');
-		if(!userId){
-			return res.status(400).end('Missing userid');
+		if (!userId) {
+			return res.status(400).send('Missing userid');
 		}
-		getStatesForUser(userId).then(function(states){
-			var activeStates = states.filter(function(state){return state.isActive});
+		getStatesForUser(userId).then(function (states) {
+			var activeStates = states.filter(function (state) {
+				return state.isActive
+			});
 			return res.json(activeStates)
-		}).catch(function(error){
+		}).catch(function (error) {
 			logger.error(error);
 			return res.status(500).send('could not retrieve active states for user');
 		});
 	});
 
 	var server = http.createServer(app);
-	var listen = Promise.promisify(server.listen.bind(server)); 
+	var listen = Promise.promisify(server.listen.bind(server));
 	return listen(app.get('port'));
 }

@@ -5,7 +5,7 @@ module.exports = function () {
 
 	stateRoutes.listActive = function (req, res) {
 		var stateClient = require('../../finiteStateMachines/lib/stateQueryService/client');
-		stateClient.getStatesForUser(req.user.id).then(function(states){
+		stateClient.getStatesForUser(req.user.id).then(function (states) {
 			var activeStates = states.filter(function (state) {
 				return state.isActive
 			});
@@ -13,8 +13,9 @@ module.exports = function () {
 				title: 'Active States',
 				activeStates: activeStates
 			});
-		}).catch(function(err){
-			return res.status(500).end(err);
+		}).catch(function (err) {
+			console.error('error', err);
+			return res.status(500) //.end(err);
 		});
 	}
 

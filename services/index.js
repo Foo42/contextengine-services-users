@@ -56,19 +56,12 @@ module.exports.bootstrapServices = function () {
     return Promise.all(
         [
             startService('./users'),
-            startService('./eventStamper')
+            startService('./eventStamper'),
+            startService('./historicalEventService'),
+            startService('./finiteStateMachines'),
+            startService('./cron'),
+            startService('./webFrontEnd'),
+            startService('./notifier')
         ]
-    ).then(function () {
-        return Promise.all(
-            [
-                startService('./historicalEventService')
-            ]
-        );
-    }).then(function () {
-        return startService('./cron')
-    }).then(function () {
-        return startService('./finiteStateMachines')
-    }).then(function () {
-        return Promise.all([startService('./webFrontEnd'), startService('./notifier')]);
-    });
+    );
 }

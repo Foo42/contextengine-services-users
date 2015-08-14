@@ -47,7 +47,9 @@ function start() {
 	return beginCreationOfEnginesForAllUsers.then(Promise.all.bind(Promise));
 }
 
-start().then(function () {
+connectToStatusNet.then(function (statusNet) {
+	return statusNet.awaitOnline('users', 'eventStamper', 'historicalEventService', 'cron');
+}).then(start).then(function () {
 	logger.log('Created finite state machines for all users');
 	process.send(JSON.stringify({
 		status: "ready"

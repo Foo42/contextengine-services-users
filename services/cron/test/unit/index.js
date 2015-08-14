@@ -20,6 +20,16 @@ describe('cron events', function () {
 					return Promise.resolve(fakeDistexProvider);
 				}
 			},
+			'../../core/serviceStatus': {
+				connect: function () {
+					return Promise.resolve({
+						awaitOnline: function () {
+							return Promise.resolve();
+						},
+						beaconStatus: function () {}
+					});
+				}
+			},
 			'cron': fakeCron
 		});
 

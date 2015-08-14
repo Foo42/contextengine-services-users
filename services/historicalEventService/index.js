@@ -18,22 +18,26 @@ app.use(express.bodyParser());
 app.use(express.methodOverride());
 app.use(app.router);
 
-app.get('/events/recent', function (request, response, next) {
-	var userId = request.param('userid');
-	if (!userId) {
-		return response.status(400).end();
-	}
-	historicalEventAccess.getRecentEventsForUser(userId).then(function (recentEvents) {
-		response.json(recentEvents);
-	}).catch(next);
-});
+connectToStatusNet.then(function awaitDependencies(statusNet) {
+	return statusNet.awaitOnline('users', 'eventStamper');
+}).then(function () {
+	app.get('/events/recent', function (request, response, next) {
+		var userId = request.param('userid');
+		if (!userId) {
+			return response.status(400).end();
+		}
+		historicalEventAccess.getRecentEventsForUser(userId).then(function (recentEvents) {
+			response.json(recentEvents);
+		}).catch(next);
+	});
 
-http.createServer(app).listen(app.get('port'), function () {
-	Promise.all([historicalEventAccess.start(), eventsMatchingEventProvider.start()]).then(function () {
-		logger.log('announcing ready');
-		process.send('{"status":"ready"}');
-		connectToStatusNet.then(function (statusNet) {
-			statusNet.beaconStatus();
+	http.createServer(app).listen(app.get('port'), function () {
+		Promise.all([historicalEventAccess.start(), eventsMatchingEventProvider.start()]).then(function () {
+			logger.log('announcing ready');
+			process.send('{"status":"ready"}');
+			connectToStatusNet.then(function (statusNet) {
+				statusNet.beaconStatus();
+			});
 		});
 	});
 });
