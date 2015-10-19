@@ -6,7 +6,7 @@ var connectToStatusNet = require('../../core/serviceStatus').connect();
 http.createServer(app).listen(app.get('port'), function () {
 	logger.log('Users Service listening on port ' + app.get('port'));
 
-	process.send(JSON.stringify({
+	process.send && process.send(JSON.stringify({
 		status: 'ready'
 	}));
 	connectToStatusNet.then(function (statusNet) {
