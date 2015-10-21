@@ -3,9 +3,11 @@ var request = require('request');
 var Promise = require('promise');
 var configNotificationListener = require('./configNotification').listener();
 
+var userServiceHost = 'http://' + (process.env['USER_SERVICE_HOST'] || 'localhost:9120') 
+
 var client = {
 	getAllRegisteredUsers: function (userId) {
-		var url = 'http://localhost:9120/users';
+		var url = userServiceHost + '/users';
 		return new Promise(function (resolve, reject) {
 			request(url, function (err, response, body) {
 				if (err) {
@@ -20,7 +22,7 @@ var client = {
 	},
 	isRegisteredUser: function (user) {
 		return new Promise(function (resolve, reject) {
-			var url = 'http://localhost:9120/emailAddresses/' + encodeURIComponent(user.emails[0].value);
+			var url = userServiceHost + '/emailAddresses/' + encodeURIComponent(user.emails[0].value);
 
 			request(url, function (err, response, body) {
 				if (err) {
@@ -40,7 +42,7 @@ var client = {
 		var userId = user.id;
 		return {
 			getStateConfig: function () {
-				var url = 'http://localhost:9120/config/' + encodeURIComponent(userId) + '/state';
+				var url = userServiceHost + '/config/' + encodeURIComponent(userId) + '/state';
 				return new Promise(function (resolve, reject) {
 					request(url, function (err, response, body) {
 						if (err) {
@@ -55,7 +57,7 @@ var client = {
 			},
 			setStateConfig: function (newConfig) {
 				return new Promise(function (resolve, reject) {
-					var url = 'http://localhost:9120/config/' + encodeURIComponent(userId) + '/state';
+					var url = userServiceHost + '/config/' + encodeURIComponent(userId) + '/state';
 					var options = {
 						url: url,
 						method: 'POST',
@@ -80,7 +82,7 @@ var client = {
 				});
 			},
 			getConfig: function (path) {
-				var url = 'http://localhost:9120/config/' + encodeURIComponent(userId) + (path.replace(/^([^\/])(.*)/, '/$1$2') || '/');
+				var url = userServiceHost + '/config/' + encodeURIComponent(userId) + (path.replace(/^([^\/])(.*)/, '/$1$2') || '/');
 				return new Promise(function (resolve, reject) {
 					request(url, function (err, response, body) {
 						if (err) {

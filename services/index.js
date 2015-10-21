@@ -55,7 +55,7 @@ module.exports.bootstrapServices = function () {
 
     return Promise.all(
         [
-            startService('./users'),
+            // startService('./users'),
             startService('./eventStamper'),
             startService('./historicalEventService'),
             startService('./finiteStateMachines'),

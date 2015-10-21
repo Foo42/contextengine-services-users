@@ -1,11 +1,30 @@
+users:
+  build: . #Might make sense for everyone to use same build image actually and just override the node command???
+  command: supervisor ./services/users/index.js
+  environment:
+    - OFFLINE_MODE=true
+    - USER_DATA_PATH=/var/userservice/userdata/
+    - SERVICE_NAME=users
+    - RABBITMQ_HOST=rabbitmq
+  ports:
+    - "9120:9120"
+  volumes:
+    - /Users/jhaeger/code/personal/ContextEngine/data/userSpecific:/var/userservice/userdata/
+  links:
+    - rabbitmq
+
 contextengine:
   build: .
   links:
     - rabbitmq
+    - users
   ports:
     - "9005:9005"
   environment:
+    - NODE_DEBUG=distex
     - OFFLINE_MODE=true
+    - USER_SERVICE_HOST=users:9120
+    - RABBITMQ_HOST=rabbitmq
 
 rabbitmq:
   image: tutum/rabbitmq
@@ -14,4 +33,3 @@ rabbitmq:
     - "15672:15672"
   environment:
     - RABBITMQ_PASS=admin
-

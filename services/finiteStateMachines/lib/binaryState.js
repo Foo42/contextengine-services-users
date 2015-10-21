@@ -64,6 +64,8 @@ var createRule = function (config, userId, expressionFactory) {
 				});
 
 				entryExpression.on('triggered', function () {
+					logger.info('entry expression triggered for', state.name, 'for user', userId);
+					entryExpression.stopWatch();
 					activate();
 				});
 
@@ -83,8 +85,11 @@ var createRule = function (config, userId, expressionFactory) {
 					exitExpression.startWatch();
 				});
 				exitExpression.on('triggered', function () {
+					logger.info('exit expression triggered for', state.name, 'for user', userId);
+					exitExpression.stopWatch();
 					deactivate();
 				});
+
 				state.on('disposing', function () {
 					exitExpression.stopWatch()
 				});
