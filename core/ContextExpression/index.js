@@ -63,7 +63,6 @@ module.exports = function (contextEventBusReader, stateQueryService) {
 					});
 					clientContract.on('status.handled', function () {
 						clientContract.on('event.recieved', triggerEvent);
-						clientContract.watch();
 
 						expression.on('starting watch', clientContract.watch.bind(clientContract));
 						expression.on('stopping watch', clientContract.stopWatching.bind(clientContract));
@@ -84,7 +83,6 @@ module.exports = function (contextEventBusReader, stateQueryService) {
 					});
 					clientContract.on('status.handled', function () {
 						clientContract.on('event.recieved', triggerEvent);
-						clientContract.watch();
 
 						expression.on('starting watch', clientContract.watch.bind(clientContract));
 						expression.on('stopping watch', clientContract.stopWatching.bind(clientContract));
