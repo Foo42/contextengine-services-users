@@ -1,5 +1,5 @@
 users:
-  build: . #Might make sense for everyone to use same build image actually and just override the node command???
+  build: .
   command: supervisor ./services/users/index.js
   environment:
     - OFFLINE_MODE=true
@@ -10,6 +10,16 @@ users:
     - "9120:9120"
   volumes:
     - /Users/jhaeger/code/personal/ContextEngine/data/userSpecific:/var/userservice/userdata/
+  links:
+    - rabbitmq
+
+eventstamper:
+  build: .
+  command: supervisor ./services/eventStamper/index.js
+  environment:
+    - OFFLINE_MODE=true
+    - SERVICE_NAME=eventStamper
+    - RABBITMQ_HOST=rabbitmq
   links:
     - rabbitmq
 
