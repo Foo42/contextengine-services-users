@@ -34,10 +34,15 @@ connectToStatusNet.then(function awaitDependencies(statusNet) {
 	http.createServer(app).listen(app.get('port'), function () {
 		Promise.all([historicalEventAccess.start(), eventsMatchingEventProvider.start()]).then(function () {
 			logger.log('announcing ready');
-			process.send('{"status":"ready"}');
-			connectToStatusNet.then(function (statusNet) {
+			if(process && process.send){
+				process.send('{"status":"ready"}');
+			}
+			return connectToStatusNet.then(function (statusNet) {
 				statusNet.beaconStatus();
 			});
+		}).catch(function(err){
+			logger.error('Error starting application:',err);
+			process.exit(1);
 		});
 	});
 });

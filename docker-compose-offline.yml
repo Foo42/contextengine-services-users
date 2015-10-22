@@ -23,17 +23,32 @@ eventstamper:
   links:
     - rabbitmq
 
+historicalevents:
+  build: .
+  command: supervisor ./services/historicalEventService/index.js
+  links:
+    - rabbitmq
+    - users
+  ports:
+    - "9110:9110"
+  environment:
+    - SERVICE_NAME=historicalEventService
+    - OFFLINE_MODE=true
+    - USER_SERVICE_HOST=users:9120
+    - RABBITMQ_HOST=rabbitmq
+
 contextengine:
   build: .
   links:
     - rabbitmq
     - users
+    - historicalevents
   ports:
     - "9005:9005"
   environment:
-    - NODE_DEBUG=distex
     - OFFLINE_MODE=true
     - USER_SERVICE_HOST=users:9120
+    - HISTORICAL_EVENTS_SERVICE_HOST=historicalevents:9110
     - RABBITMQ_HOST=rabbitmq
 
 rabbitmq:
