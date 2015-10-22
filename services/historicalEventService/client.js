@@ -2,7 +2,7 @@ var request = require('request');
 var Promise = require('promise');
 var logger = require('../../core/logger');
 
-var host = 'http://' + (process.env['HISTORICAL_EVENTS_SERVICE_HOST'] || 'localhost:9110')
+var host = 'http://' + (process.env['HISTORICAL_EVENTS_SERVICE_HOST'] || 'historicalevents:9110')
 
 module.exports = {
 	getRecentEventsForUser: function (userId) {

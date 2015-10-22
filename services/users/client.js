@@ -3,7 +3,7 @@ var request = require('request');
 var Promise = require('promise');
 var configNotificationListener = require('./configNotification').listener();
 
-var userServiceHost = 'http://' + (process.env['USER_SERVICE_HOST'] || 'localhost:9120') 
+var userServiceHost = 'http://' + (process.env['USER_SERVICE_HOST'] || 'users:9120') 
 
 var client = {
 	getAllRegisteredUsers: function (userId) {

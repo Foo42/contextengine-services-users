@@ -34,7 +34,6 @@ historicalevents:
   environment:
     - SERVICE_NAME=historicalEventService
     - OFFLINE_MODE=true
-    - USER_SERVICE_HOST=users:9120
     - RABBITMQ_HOST=rabbitmq
 
 contextengine:
@@ -47,8 +46,6 @@ contextengine:
     - "9005:9005"
   environment:
     - OFFLINE_MODE=true
-    - USER_SERVICE_HOST=users:9120
-    - HISTORICAL_EVENTS_SERVICE_HOST=historicalevents:9110
     - RABBITMQ_HOST=rabbitmq
 
 rabbitmq:
