@@ -60,7 +60,7 @@ module.exports.bootstrapServices = function () {
             // startService('./historicalEventService'),
             // startService('./finiteStateMachines'),
             // startService('./cron'),
-            startService('./webFrontEnd'),
+            // startService('./webFrontEnd'),
             startService('./notifier')
         ]
     );

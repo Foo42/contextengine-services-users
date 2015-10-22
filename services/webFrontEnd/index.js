@@ -9,12 +9,16 @@ connectToStatusNet.then(function (statusNet) {
 	logger.log('starting http server...');
 	http.createServer(app).listen(app.get('port'), function () {
 		logger.log('Express server listening on port ' + app.get('port'));
-
-		process.send(JSON.stringify({
-			status: "ready"
-		}));
-		connectToStatusNet.then(function (statusNet) {
+    if(process && process.send){
+  		process.send(JSON.stringify({
+  			status: "ready"
+  		}));
+    }
+		return connectToStatusNet.then(function (statusNet) {
 			statusNet.beaconStatus();
 		});
 	});
+}).catch(function(err){
+  logger.error('Error starting web frontend',err);
+  process.exit(1);
 });

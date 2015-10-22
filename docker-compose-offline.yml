@@ -60,8 +60,9 @@ cron:
   links:
     - rabbitmq
 
-contextengine:
+webfrontend:
   build: .
+  command: supervisor ./services/webFrontEnd/index.js
   links:
     - rabbitmq
     - users
@@ -69,6 +70,18 @@ contextengine:
     - fsm
   ports:
     - "9005:9005"
+  environment:
+    - SERVICE_NAME=webFrontEnd
+    - OFFLINE_MODE=true
+    - RABBITMQ_HOST=rabbitmq
+
+contextengine:
+  build: .
+  links:
+    - rabbitmq
+    - users
+    - historicalevents
+    - fsm
   environment:
     - OFFLINE_MODE=true
     - RABBITMQ_HOST=rabbitmq
