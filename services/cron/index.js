@@ -30,13 +30,12 @@ connectToStatusNet.then(function (statusNet) {
 	});
 	return bootstrap;
 }).then(function () {
-	if (!process || !process.send) {
-		return;
+	if (process && process.send) {
+  	process.send(JSON.stringify({
+  		status: "ready"
+  	}));
 	}
-	process.send(JSON.stringify({
-		status: "ready"
-	}));
-	connectToStatusNet.then(function (statusNet) {
+	return connectToStatusNet.then(function (statusNet) {
 		statusNet.beaconStatus();
 	});
 }).catch(function (err) {

@@ -50,6 +50,16 @@ fsm:
     - RABBITMQ_HOST=rabbitmq
     - SERVICE_NAME=finiteStateMachines
 
+cron:
+  build: .
+  command: supervisor ./services/cron/index.js
+  environment:
+    - OFFLINE_MODE=true
+    - SERVICE_NAME=cron
+    - RABBITMQ_HOST=rabbitmq
+  links:
+    - rabbitmq
+
 contextengine:
   build: .
   links:
