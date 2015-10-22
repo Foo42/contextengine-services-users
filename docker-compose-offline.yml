@@ -36,12 +36,27 @@ historicalevents:
     - OFFLINE_MODE=true
     - RABBITMQ_HOST=rabbitmq
 
+fsm:
+  build: .
+  command: supervisor ./services/finiteStateMachines/index.js
+  links:
+    - rabbitmq
+    - users
+    - historicalevents
+  ports:
+    - "9111:9111"
+  environment:
+    - OFFLINE_MODE=true
+    - RABBITMQ_HOST=rabbitmq
+    - SERVICE_NAME=finiteStateMachines
+
 contextengine:
   build: .
   links:
     - rabbitmq
     - users
     - historicalevents
+    - fsm
   ports:
     - "9005:9005"
   environment:

@@ -6,7 +6,7 @@ var getStatesForUser = Promise.promisify(require('./lib/finiteStateDirectQuerySe
 
 module.exports.start = function () {
 	var app = express();
-	app.set('port', process.env.HISTORICAL_EVENT_SERVICE_PORT || 9111);
+	app.set('port', 9111);
 	app.use(express.logger('dev'));
 	app.use(express.cookieParser());
 	app.use(express.bodyParser());

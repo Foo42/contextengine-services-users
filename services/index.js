@@ -58,7 +58,7 @@ module.exports.bootstrapServices = function () {
             // startService('./users'),
             // startService('./eventStamper'),
             // startService('./historicalEventService'),
-            startService('./finiteStateMachines'),
+            // startService('./finiteStateMachines'),
             startService('./cron'),
             startService('./webFrontEnd'),
             startService('./notifier')

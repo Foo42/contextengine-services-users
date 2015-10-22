@@ -51,9 +51,11 @@ connectToStatusNet.then(function (statusNet) {
 	return statusNet.awaitOnline('users', 'eventStamper', 'historicalEventService', 'cron');
 }).then(start).then(function () {
 	logger.log('Created finite state machines for all users');
-	process.send(JSON.stringify({
-		status: "ready"
-	}));
+	if(process && process.send){
+			process.send(JSON.stringify({
+				status: "ready"
+			}));
+	}
 	connectToStatusNet.then(function (statusNet) {
 		statusNet.beaconStatus();
 	})

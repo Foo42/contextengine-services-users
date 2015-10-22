@@ -3,7 +3,7 @@ var request = require('request');
 
 module.exports = {
 	getStatesForUser:function(userId){
-		var url = 'http://localhost:9111/states/active?userid=' + userId;
+		var url = 'http://fsm:9111/states/active?userid=' + userId;
 		return new Promise(function (resolve, reject) {
 			request(url, function (err, response, body) {
 				if (err) {
