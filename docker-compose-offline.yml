@@ -60,6 +60,17 @@ cron:
   links:
     - rabbitmq
 
+notifier:
+  build: .
+  command: supervisor ./services/notifier/index.js
+  environment:
+    - OFFLINE_MODE=true
+    - SERVICE_NAME=notifier
+    - RABBITMQ_HOST=rabbitmq
+  links:
+    - rabbitmq
+    - users
+
 webfrontend:
   build: .
   command: supervisor ./services/webFrontEnd/index.js

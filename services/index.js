@@ -61,7 +61,7 @@ module.exports.bootstrapServices = function () {
             // startService('./finiteStateMachines'),
             // startService('./cron'),
             // startService('./webFrontEnd'),
-            startService('./notifier')
+            // startService('./notifier')
         ]
     );
 }

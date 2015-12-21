@@ -24,12 +24,19 @@ module.exports.connect = function () {
 				},
 				awaitOnline: function () {
 					servicesToWaitFor = _.values(arguments);
+          var remaining = servicesToWaitFor.reduce(function(acc, serviceName){
+            acc[serviceName] = true;
+            return acc;
+          },{});
 					var promises = servicesToWaitFor.map(function (serviceName) {
 						logger.log('Awaiting', serviceName, 'to come online...');
 						return new Promise(function (resolve, reject) {
 							var key = ['service', serviceName, 'status', 'heartbeat'].join('.');
 							queue.topicEmitter.once(key, resolve.bind(null));
-						});
+						}).then(function(){
+              delete remaining[serviceName];
+              logger.info('Detected',serviceName,'online. Still waiting for',Object.keys(remaining).join(', '));
+            });
 					});
 					return Promise.all(promises);
 				}
