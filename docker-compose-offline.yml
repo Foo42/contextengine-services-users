@@ -31,8 +31,11 @@ historicalevents:
     - users
   ports:
     - "9110:9110"
+  volumes:
+    - /Users/jhaeger/code/personal/ContextEngine/data/userSpecific:/var/userservice/userdata/
   environment:
     - SERVICE_NAME=historicalEventService
+    - USER_DATA_PATH=/var/userservice/userdata/
     - OFFLINE_MODE=true
     - RABBITMQ_HOST=rabbitmq
 
