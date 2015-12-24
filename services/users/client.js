@@ -3,19 +3,23 @@ var request = require('request');
 var Promise = require('promise');
 var configNotificationListener = require('./configNotification').listener();
 
-var userServiceHost = 'http://' + (process.env['USER_SERVICE_HOST'] || 'users:9120') 
+var userServiceHost = 'http://' + (process.env['USER_SERVICE_HOST'] || 'users:9120')
 
 var client = {
 	getAllRegisteredUsers: function (userId) {
 		var url = userServiceHost + '/users';
 		return new Promise(function (resolve, reject) {
+      logger.log('fetching all registered users...')
 			request(url, function (err, response, body) {
 				if (err) {
+          logger.error('error fetching all registered users', err);
 					return reject(err);
 				}
 				if (response.statusCode !== 200) {
+          logger.error('error fetching all registered users', response.statusCode);
 					return reject(new Error('did not get 200 response from service. Got ' + response.statusCode));
 				}
+        logger.log('got all registered users')
 				resolve(JSON.parse(body));
 			});
 		});

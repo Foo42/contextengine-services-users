@@ -1,4 +1,5 @@
-var debuglog = require('debugLog')('notifications_service');
+var logger = require('../../../core/logger');
+var debuglog = require('debuglog')('notifications_service');
 var registeredUsersAccess = require('../../users/client');
 var connectingDistexClient = require('./connectDistexClient');
 var send = require('./sender');
@@ -28,10 +29,10 @@ function getNotificationConfigForUser(user) {
 
 function pushNotification(user, message) {
 	getNotificationConfigForUser(user).then(function (config) {
-		send(user, config, message).then(function () {
-			console.log('notification sent via pushover');
+		return send(user, config, message).then(function () {
+			logger.log('notification sent via pushover');
 		});
-	}).catch(console.error.bind(console, 'Error sending push notification'));
+	}).catch(function(err){console.error('Error sending push notification', err, err.stack)});
 }
 
 function setupNotification(user, notificationSpec) {
@@ -58,7 +59,7 @@ function setupNotification(user, notificationSpec) {
 module.exports.start = function start() {
 	return registeredUsersAccess.getAllRegisteredUsers().then(function (users) {
 		return Promise.map(users, function setupNotificationsForUser(user) {
-			debuglog('setting up notifications for user', user.id);
+      logger.log('setting up notifications for user',user);
 			return getNotificationConfigForUser(user).then(function (config) {
 				return Promise.map(config.notifictionTriggers || [], setupNotification.bind(null, user))
 			});

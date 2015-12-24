@@ -1,6 +1,6 @@
 users:
   build: .
-  command: supervisor ./services/users/index.js
+  command: node ./services/users/index.js
   environment:
     - OFFLINE_MODE=true
     - USER_DATA_PATH=/var/userservice/userdata/
@@ -15,7 +15,7 @@ users:
 
 eventstamper:
   build: .
-  command: supervisor ./services/eventStamper/index.js
+  command: node ./services/eventStamper/index.js
   environment:
     - OFFLINE_MODE=true
     - SERVICE_NAME=eventStamper
@@ -25,7 +25,7 @@ eventstamper:
 
 historicalevents:
   build: .
-  command: supervisor ./services/historicalEventService/index.js
+  command: node ./services/historicalEventService/index.js
   links:
     - rabbitmq
     - users
@@ -41,7 +41,7 @@ historicalevents:
 
 fsm:
   build: .
-  command: supervisor ./services/finiteStateMachines/index.js
+  command: node ./services/finiteStateMachines/index.js
   links:
     - rabbitmq
     - users
@@ -55,7 +55,7 @@ fsm:
 
 cron:
   build: .
-  command: supervisor ./services/cron/index.js
+  command: node ./services/cron/index.js
   environment:
     - OFFLINE_MODE=true
     - SERVICE_NAME=cron
@@ -65,7 +65,7 @@ cron:
 
 notifier:
   build: .
-  command: supervisor ./services/notifier/index.js
+  command: node ./services/notifier/index.js
   environment:
     - OFFLINE_MODE=true
     - SERVICE_NAME=notifier
@@ -76,7 +76,7 @@ notifier:
 
 webfrontend:
   build: .
-  command: supervisor ./services/webFrontEnd/index.js
+  command: node ./services/webFrontEnd/index.js
   links:
     - rabbitmq
     - users

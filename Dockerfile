@@ -1,7 +1,7 @@
 FROM node
-RUN ["npm", "install", "supervisor", "-g"]
 COPY . /src
 WORKDIR /src
+RUN date > imageBuildTime.txt
 EXPOSE 9005
 ENV NODE_ENV production
-CMD ["supervisor", "."]
+CMD ["node", "."]

@@ -18,7 +18,6 @@ module.exports.connect = function () {
 					var key = ['service', serviceName, 'status', 'heartbeat'].join('.');
 					exchange.publish(key, {});
 					setInterval(function () {
-						logger.log('Sending beacon', key);
 						exchange.publish(key, {});
 					}, 5000).unref();
 				},
