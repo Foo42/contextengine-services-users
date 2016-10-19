@@ -1,7 +1,7 @@
 FROM node
-COPY package.json ./
+COPY package.json /src/
+WORKDIR /src
 RUN npm install
 COPY . /src
-WORKDIR /src
 EXPOSE 9120
 CMD ["node", "."]
